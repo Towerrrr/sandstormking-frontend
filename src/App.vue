@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+import { useLoginUserStore } from './stores/user'
+
+const loginUserStore = useLoginUserStore()
+loginUserStore.fetchLoginUser()
 </script>
 
 <template>
