@@ -8,9 +8,8 @@
         <div class="room-container">
           <div class="room-header">
             <h2>（╯°Д°）╯︵/(.□ . )</h2>
-            <a-button type="primary" @click="handleRefresh">
-              刷新
-            </a-button>
+            <a-button type="primary" shape="circle" :icon="h(RetweetOutlined)" @click="handleRefresh" />
+            <a-button type="primary" shape="circle" :icon="h(PlusOutlined)" @click="showAddModal = true" />
           </div>
 
           <a-spin :spinning="loading">
@@ -71,6 +70,37 @@
             />
           </div>
         </div>
+
+        <a-modal
+          v-model:open="showAddModal"
+          title="创建房间"
+          @ok="handleAddRoom"
+          @cancel="resetForm"
+          :confirm-loading="addLoading"
+        >
+          <a-form
+            :model="roomForm"
+            :label-col="{ span: 6 }"
+            :wrapper-col="{ span: 18 }"
+          >
+            <a-form-item label="房间名称" required>
+              <a-input
+                v-model:value="roomForm.name"
+                placeholder="请输入房间名称"
+                :maxlength="20"
+              />
+            </a-form-item>
+            <a-form-item label="最大玩家数" required>
+              <a-input-number
+                v-model:value="roomForm.maxPlayers"
+                :min="2"
+                :max="10"
+                placeholder="请输入最大玩家数"
+                style="width: 100%"
+              />
+            </a-form-item>
+          </a-form>
+        </a-modal>
       </a-layout-content>
       <a-layout-footer class="footer">
         <a href="https://www.github.com/Towerrrr" target="_blank"> Github : Towerrrr </a>
@@ -80,10 +110,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, h } from 'vue'
 import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
-import { listRoomsUsingGet, joinRoomUsingGet } from '@/api/roomController'
+import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
+import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -91,6 +122,13 @@ const current = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const currentUserId = ref<number>()
+
+const showAddModal = ref(false)
+const addLoading = ref(false)
+const roomForm = ref<API.RoomAddRequest>({
+  name: '',
+  maxPlayers: 3
+})
 
 const loadRooms = async () => {
   loading.value = true
@@ -113,7 +151,37 @@ const loadRooms = async () => {
     loading.value = false
   }
 }
+const handleAddRoom = async () => {
+  if (!roomForm.value.name || !roomForm.value.maxPlayers) {
+    message.warning('请填写完整的房间信息')
+    return
+  }
 
+  addLoading.value = true
+  try {
+    const res = await addRoomUsingPost(roomForm.value)
+    if (res.data.code === 0) {
+      message.success('创建房间成功')
+      showAddModal.value = false
+      resetForm()
+      await loadRooms()
+    } else {
+      message.error(res.data.message || '创建房间失败')
+    }
+  } catch (error) {
+    message.error('创建房间失败')
+    console.error(error)
+  } finally {
+    addLoading.value = false
+  }
+}
+
+const resetForm = () => {
+  roomForm.value = {
+    name: '',
+    maxPlayers: 3
+  }
+}
 const handleJoinRoom = async (roomId: number | undefined) => {
   if (!roomId) {
     message.warning('房间ID无效')
