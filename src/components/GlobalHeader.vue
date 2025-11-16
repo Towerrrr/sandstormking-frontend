@@ -36,6 +36,7 @@ import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/user'
 import { userLogoutUsingPost } from '@/api/userController'
 import { message } from 'ant-design-vue'
+import { LogoutOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
