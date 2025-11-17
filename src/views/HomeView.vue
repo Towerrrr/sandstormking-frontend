@@ -71,36 +71,14 @@
           </div>
         </div>
 
-        <a-modal
-          v-model:open="showAddModal"
-          title="创建房间"
+        <RoomAddModal
+          :open="showAddModal"
+          :roomForm="roomForm"
+          :confirmLoading="addLoading"
           @ok="handleAddRoom"
           @cancel="resetForm"
-          :confirm-loading="addLoading"
-        >
-          <a-form
-            :model="roomForm"
-            :label-col="{ span: 6 }"
-            :wrapper-col="{ span: 18 }"
-          >
-            <a-form-item label="房间名称" required>
-              <a-input
-                v-model:value="roomForm.name"
-                placeholder="请输入房间名称"
-                :maxlength="20"
-              />
-            </a-form-item>
-            <a-form-item label="最大玩家数" required>
-              <a-input-number
-                v-model:value="roomForm.maxPlayers"
-                :min="2"
-                :max="10"
-                placeholder="请输入最大玩家数"
-                style="width: 100%"
-              />
-            </a-form-item>
-          </a-form>
-        </a-modal>
+          @update:open="showAddModal = $event"
+        />
       </a-layout-content>
       <a-layout-footer class="footer">
         <a href="https://www.github.com/Towerrrr" target="_blank"> Github : Towerrrr </a>
@@ -113,6 +91,7 @@
 import { ref, onMounted, h } from 'vue'
 import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
+import RoomAddModal from '@/components/RoomAddModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
 
