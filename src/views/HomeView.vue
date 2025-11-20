@@ -79,6 +79,14 @@
           @cancel="resetForm"
           @update:open="showAddModal = $event"
         />
+        <RoomDetailModal
+          v-model:open="modalVisible"
+          :room="currentRoom"
+          :members="roomMembers"
+          :ready-loading="isReadyLoading"
+          @cancel="modalVisible = false"
+          @ready="handleReady"
+        />
       </a-layout-content>
       <a-layout-footer class="footer">
         <a href="https://www.github.com/Towerrrr" target="_blank"> Github : Towerrrr </a>
@@ -92,8 +100,11 @@ import { ref, onMounted, h } from 'vue'
 import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
+import RoomDetailModal from '@/components/RoomDetailModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
+import type { User } from '@/api/types/user'
+
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -108,6 +119,11 @@ const roomForm = ref<API.RoomAddRequest>({
   name: '',
   maxPlayers: 3
 })
+
+const modalVisible = ref(false)
+const currentRoom = ref<API.Room>()
+const roomMembers = ref<User[]>([])
+const isReadyLoading = ref(false)
 
 const loadRooms = async () => {
   loading.value = true
@@ -170,8 +186,13 @@ const handleJoinRoom = async (roomId: number | undefined) => {
   try {
     const res = await joinRoomUsingGet({ roomId })
     if (res.data.code === 0) {
-      // todo 加入房间逻辑
       message.success('加入房间成功')
+
+      currentRoom.value = roomList.value.find(r => r.id === roomId)
+      // TODO: 这里要获取成员数据，暂时可用空数组或模拟数据
+      roomMembers.value = []
+      modalVisible.value = true
+
       await loadRooms()
     } else {
       message.error(res.data.message || '加入房间失败')
@@ -196,6 +217,11 @@ const formatTime = (timestamp: number | string | undefined) => {
   if (!timestamp) return '-'
   const date = new Date(Number(timestamp))
   return date.toLocaleString('zh-CN')
+}
+
+const handleReady = () => {
+  // TODO: 实现准备逻辑，例如调用接口更新用户状态等
+  message.info('点击了准备按钮')
 }
 
 onMounted(() => {
