@@ -86,6 +86,11 @@ declare namespace API {
     userRole?: string
   }
 
+  type quitRoomUsingGETParams = {
+    /** roomId */
+    roomId: number
+  }
+
   type Room = {
     createdTime?: number
     id?: number

@@ -84,7 +84,7 @@
           :room="currentRoom"
           :members="roomMembers"
           :ready-loading="isReadyLoading"
-          @cancel="modalVisible = false"
+          @cancel="handleQuitRoom"
           @ready="handleReady"
         />
       </a-layout-content>
@@ -101,7 +101,7 @@ import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
-import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
+import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet } from '@/api/roomController'
 import { batchGetUsersUsingPost } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
 
@@ -210,6 +210,28 @@ const handleJoinRoom = async (roomId: number | undefined) => {
     }
   } catch (error) {
     message.error('加入房间失败')
+    console.error(error)
+  }
+}
+
+const handleQuitRoom = async () => {
+  if (!currentRoom.value?.id) {
+    modalVisible.value = false
+    return
+  }
+  try {
+    const res = await quitRoomUsingGet({ roomId: currentRoom.value.id })
+    if (res.data.code === 0) {
+      message.success('已退出房间')
+      modalVisible.value = false
+      await loadRooms()
+      roomMembers.value = []
+      currentRoom.value = undefined
+    } else {
+      message.error(res.data.message || '退出房间失败')
+    }
+  } catch (error) {
+    message.error('退出房间失败')
     console.error(error)
   }
 }
