@@ -102,7 +102,7 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet } from '@/api/roomController'
-import { batchGetUsersUsingPost } from '@/api/userController'
+import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false)
@@ -190,18 +190,24 @@ const handleJoinRoom = async (roomId: number | undefined) => {
       const room = roomList.value.find(r => r.id === roomId)
       currentRoom.value = room
 
+      let members: API.UserVO[] = []
+
       if (room?.playerIds && room.playerIds.length > 0) {
         const userRes = await batchGetUsersUsingPost({ userIdList: room.playerIds })
         if (userRes.data.code === 0 && userRes.data.data) {
-          // userRes.data.data 是 UserVO[]
-          roomMembers.value = userRes.data.data
+          members = userRes.data.data
         } else {
-          roomMembers.value = []
           message.error(userRes.data.message || '获取成员信息失败')
         }
-      } else {
-        roomMembers.value = []
       }
+
+      const loginRes = await getLoginUserUsingGet()
+      if (loginRes.data.code === 0 && loginRes.data.data) {
+        const currentUserVO = loginRes.data.data
+        members.push(currentUserVO)
+      }
+
+      roomMembers.value = members
 
       modalVisible.value = true
       await loadRooms()
