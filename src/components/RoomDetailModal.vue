@@ -22,7 +22,8 @@
       </div>
       <div class="info-row">
         <span class="label">房主：</span>
-        <span>{{ room?.ownerName }}</span>
+        <span v-if="ownerLoading">加载中...</span>
+        <span v-else>{{ ownerUser?.userName || '无名' }}</span>
       </div>
       <div class="info-row">
         <span class="label">创建时间：</span>
@@ -65,8 +66,12 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineProps, defineEmits, computed, ref, watch } from 'vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
+import { getUserVoByIdUsingGet } from '@/api/userController'
+
+const ownerUser = ref<API.UserVO | null>(null)
+const ownerLoading = ref(false)
 
 const props = defineProps<{
   open: boolean
@@ -74,7 +79,7 @@ const props = defineProps<{
     id?: number
     name?: string
     maxPlayers?: number
-    ownerName?: string
+    ownerId?: number
     createdTime?: number | string
   }
   members: API.UserVO[]
@@ -109,6 +114,28 @@ function formatTime(timestamp: number | string | undefined) {
   const date = new Date(Number(timestamp))
   return date.toLocaleString('zh-CN')
 }
+
+async function fetchOwnerUser(ownerId?: number) {
+  if (!ownerId) {
+    ownerUser.value = null
+    return
+  }
+  ownerLoading.value = true
+  try {
+    const res = await getUserVoByIdUsingGet({ id: ownerId })
+    ownerUser.value = res.data?.data ?? null
+  } finally {
+    ownerLoading.value = false
+  }
+}
+
+watch(
+  () => props.room?.ownerId,
+  (ownerId) => {
+    fetchOwnerUser(ownerId)
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
