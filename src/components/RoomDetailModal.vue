@@ -17,10 +17,6 @@
         <span>{{ room?.id }}</span>
       </div>
       <div class="info-row">
-        <span class="label">最大玩家数：</span>
-        <span>{{ room?.maxPlayers }}</span>
-      </div>
-      <div class="info-row">
         <span class="label">房主：</span>
         <span v-if="ownerLoading">加载中...</span>
         <span v-else>{{ ownerUser?.userName || '无名' }}</span>

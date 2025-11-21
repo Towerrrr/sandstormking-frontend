@@ -154,9 +154,22 @@ const handleAddRoom = async () => {
   addLoading.value = true
   try {
     const res = await addRoomUsingPost(roomForm.value)
-    if (res.data.code === 0) {
+    if (res.data.code === 0 && res.data.data) {
       message.success('创建房间成功')
       showAddModal.value = false
+
+      currentRoom.value = res.data.data
+
+      let members: API.UserVO[] = []
+      const loginRes = await getLoginUserUsingGet()
+      if (loginRes.data.code === 0 && loginRes.data.data) {
+        const currentUserVO = loginRes.data.data
+        members.push(currentUserVO)
+      }
+      roomMembers.value = members
+
+      modalVisible.value = true
+      
       resetForm()
       await loadRooms()
     } else {
