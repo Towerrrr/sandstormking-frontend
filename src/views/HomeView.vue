@@ -103,7 +103,7 @@ import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
-import type { User } from '@/api/types/user'
+import type { User } from '@/types/user'
 
 
 const loading = ref(false)

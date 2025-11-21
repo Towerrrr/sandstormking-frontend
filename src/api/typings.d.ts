@@ -11,6 +11,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseListUserVO_ = {
+    code?: number
+    data?: UserVO[]
+    message?: string
+  }
+
   type BaseResponseLoginUserVO_ = {
     code?: number
     data?: LoginUserVO
@@ -33,6 +39,28 @@ declare namespace API {
     code?: number
     data?: string
     message?: string
+  }
+
+  type BaseResponseUser_ = {
+    code?: number
+    data?: User
+    message?: string
+  }
+
+  type BaseResponseUserVO_ = {
+    code?: number
+    data?: UserVO
+    message?: string
+  }
+
+  type getUserByIdUsingGETParams = {
+    /** id */
+    id?: number
+  }
+
+  type getUserVOByIdUsingGETParams = {
+    /** id */
+    id?: number
   }
 
   type joinRoomUsingGETParams = {
@@ -72,6 +100,24 @@ declare namespace API {
     name?: string
   }
 
+  type User = {
+    createTime?: string
+    editTime?: string
+    id?: number
+    isDelete?: number
+    updateTime?: string
+    userAccount?: string
+    userAvatar?: string
+    userName?: string
+    userPassword?: string
+    userProfile?: string
+    userRole?: string
+  }
+
+  type UserBatchGetRequest = {
+    userIdList?: number[]
+  }
+
   type UserLoginRequest = {
     userAccount?: string
     userPassword?: string
@@ -81,5 +127,15 @@ declare namespace API {
     checkPassword?: string
     userAccount?: string
     userPassword?: string
+  }
+
+  type UserVO = {
+    createTime?: string
+    id?: number
+    userAccount?: string
+    userAvatar?: string
+    userName?: string
+    userProfile?: string
+    userRole?: string
   }
 }
