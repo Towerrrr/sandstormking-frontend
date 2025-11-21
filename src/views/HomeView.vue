@@ -102,9 +102,8 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost } from '@/api/roomController'
+import { batchGetUsersUsingPost } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
-import type { User } from '@/types/user'
-
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -122,7 +121,7 @@ const roomForm = ref<API.RoomAddRequest>({
 
 const modalVisible = ref(false)
 const currentRoom = ref<API.Room>()
-const roomMembers = ref<User[]>([])
+const roomMembers = ref<API.UserVO[]>([])
 const isReadyLoading = ref(false)
 
 const loadRooms = async () => {
@@ -188,11 +187,23 @@ const handleJoinRoom = async (roomId: number | undefined) => {
     if (res.data.code === 0) {
       message.success('加入房间成功')
 
-      currentRoom.value = roomList.value.find(r => r.id === roomId)
-      // TODO: 这里要获取成员数据，暂时可用空数组或模拟数据
-      roomMembers.value = []
-      modalVisible.value = true
+      const room = roomList.value.find(r => r.id === roomId)
+      currentRoom.value = room
 
+      if (room?.playerIds && room.playerIds.length > 0) {
+        const userRes = await batchGetUsersUsingPost({ userIdList: room.playerIds })
+        if (userRes.data.code === 0 && userRes.data.data) {
+          // userRes.data.data 是 UserVO[]
+          roomMembers.value = userRes.data.data
+        } else {
+          roomMembers.value = []
+          message.error(userRes.data.message || '获取成员信息失败')
+        }
+      } else {
+        roomMembers.value = []
+      }
+
+      modalVisible.value = true
       await loadRooms()
     } else {
       message.error(res.data.message || '加入房间失败')

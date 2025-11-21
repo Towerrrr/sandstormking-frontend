@@ -77,11 +77,7 @@ const props = defineProps<{
     ownerName?: string
     createdTime?: number | string
   }
-  members: Array<{
-    id: number | string
-    userName?: string
-    userAvatar?: string
-  }>
+  members: API.UserVO[]
   readyLoading?: boolean
 }>()
 
