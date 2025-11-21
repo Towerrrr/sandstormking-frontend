@@ -104,6 +104,7 @@ import RoomDetailModal from '@/components/RoomDetailModal.vue'
 import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet } from '@/api/roomController'
 import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
+import { useWebSocket } from '@/composables/useWebSocket'
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -123,6 +124,8 @@ const modalVisible = ref(false)
 const currentRoom = ref<API.Room>()
 const roomMembers = ref<API.UserVO[]>([])
 const isReadyLoading = ref(false)
+
+const { ws, connect, disconnect } = useWebSocket(handleWsMessage)
 
 const loadRooms = async () => {
   loading.value = true
@@ -169,7 +172,12 @@ const handleAddRoom = async () => {
       roomMembers.value = members
 
       modalVisible.value = true
-      
+      if (currentRoom.value?.id !== undefined) {
+        connect(currentRoom.value.id)
+      } else {
+        message.error("房间ID无效，无法连接 WebSocket")
+      }
+
       resetForm()
       await loadRooms()
     } else {
@@ -223,6 +231,12 @@ const handleJoinRoom = async (roomId: number | undefined) => {
       roomMembers.value = members
 
       modalVisible.value = true
+      if (currentRoom.value?.id !== undefined) {
+        connect(currentRoom.value.id)
+      } else {
+        message.error("房间ID无效，无法连接 WebSocket")
+      }
+
       await loadRooms()
     } else {
       message.error(res.data.message || '加入房间失败')
@@ -269,6 +283,17 @@ const formatTime = (timestamp: number | string | undefined) => {
   if (!timestamp) return '-'
   const date = new Date(Number(timestamp))
   return date.toLocaleString('zh-CN')
+}
+
+function handleWsMessage(data: any) {
+  if (data.type === "INFO" && data.user) {
+    // 判断是否已在房间成员中，避免重复
+    const exists = roomMembers.value.some(u => u.id == data.user.id)
+    if (!exists) {
+      roomMembers.value.push(data.user)
+    }
+    message.info(data.message)
+  }
 }
 
 const handleReady = () => {
