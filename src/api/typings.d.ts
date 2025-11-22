@@ -102,12 +102,17 @@ declare namespace API {
     maxPlayers?: number
     name?: string
     ownerId?: number
-    playerIds?: number[]
+    roomMembers?: RoomMember[]
   }
 
   type RoomAddRequest = {
     maxPlayers?: number
     name?: string
+  }
+
+  type RoomMember = {
+    ready?: boolean
+    userId?: number
   }
 
   type User = {

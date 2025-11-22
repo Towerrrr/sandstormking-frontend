@@ -38,7 +38,7 @@
                   </p>
                   <p>
                     <span class="label">玩家数量:</span>
-                    <span>{{ room.playerIds?.length || 0 }} / {{ room.maxPlayers }}</span>
+                    <span>{{ room.roomMembers?.length || 0 }} / {{ room.maxPlayers }}</span>
                   </p>
                   <p>
                     <span class="label">创建时间:</span>
@@ -191,7 +191,7 @@ const handleAddRoom = async () => {
 
 const resetForm = () => {
   roomForm.value = {
-    name: '',
+    name: '新房间',
     maxPlayers: 3
   }
 }
@@ -257,7 +257,7 @@ const handleRefresh = () => {
 
 const isRoomFull = (room: API.Room) => {
   if (!room.maxPlayers) return false
-  return (room.playerIds?.length || 0) >= room.maxPlayers
+  return (room.roomMembers?.length || 0) >= room.maxPlayers
 }
 
 const formatTime = (timestamp: number | string | undefined) => {
@@ -273,9 +273,7 @@ const handleWsMessage = async (data: any) => {
   if (!roomId) return;
 
   switch (data.type) {
-    case 'JOIN_ROOM':
-    case 'LEAVE_ROOM': {
-      // 重新拉取房间和成员信息
+    case 'ROOM_STATE_CHANGED': {
       try {
         const { room, members } = await fetchRoomDetailAndMembers(roomId);
         currentRoom.value = room;
@@ -301,9 +299,11 @@ const fetchRoomDetailAndMembers = async (roomId: number) => {
   const room = detailRes.data.data;
 
   let members: API.UserVO[] = [];
-  const playerIds = room.playerIds;
-  if (playerIds && playerIds.length > 0) {
-    const userRes = await batchGetUsersUsingPost({ userIdList: playerIds });
+  const roomMembersArr = room.roomMembers;
+  const userIdList = roomMembersArr?.map((m: API.RoomMember) => m.userId).filter(Boolean) || [];
+  if (userIdList.length > 0) {
+    const userIdList = roomMembersArr?.map((m: API.RoomMember) => m.userId).filter((id): id is number => id !== undefined) || [];
+    const userRes = await batchGetUsersUsingPost({ userIdList });
     if (userRes.data.code === 0 && userRes.data.data) {
       members = userRes.data.data;
     } else {
