@@ -53,6 +53,11 @@ declare namespace API {
     message?: string
   }
 
+  type getRoomUsingGETParams = {
+    /** roomId */
+    roomId: number
+  }
+
   type getUserByIdUsingGETParams = {
     /** id */
     id?: number

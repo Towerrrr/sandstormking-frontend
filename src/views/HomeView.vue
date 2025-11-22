@@ -101,7 +101,7 @@ import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
-import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet } from '@/api/roomController'
+import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet, getRoomUsingGet } from '@/api/roomController'
 import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
 import { useWebSocket } from '@/composables/useWebSocket'
@@ -116,7 +116,7 @@ const currentUserId = ref<number>()
 const showAddModal = ref(false)
 const addLoading = ref(false)
 const roomForm = ref<API.RoomAddRequest>({
-  name: '',
+  name: '新房间',
   maxPlayers: 3
 })
 
@@ -124,8 +124,6 @@ const modalVisible = ref(false)
 const currentRoom = ref<API.Room>()
 const roomMembers = ref<API.UserVO[]>([])
 const isReadyLoading = ref(false)
-
-const { ws, connect, disconnect } = useWebSocket(handleWsMessage)
 
 const loadRooms = async () => {
   loading.value = true
@@ -199,53 +197,35 @@ const resetForm = () => {
 }
 const handleJoinRoom = async (roomId: number | undefined) => {
   if (!roomId) {
-    message.warning('房间ID无效')
-    return
+    message.warning('房间ID无效');
+    return;
   }
 
   try {
-    const res = await joinRoomUsingGet({ roomId })
-    if (res.data.code === 0) {
-      message.success('加入房间成功')
-
-      const room = roomList.value.find(r => r.id === roomId)
-      currentRoom.value = room
-
-      let members: API.UserVO[] = []
-
-      if (room?.playerIds && room.playerIds.length > 0) {
-        const userRes = await batchGetUsersUsingPost({ userIdList: room.playerIds })
-        if (userRes.data.code === 0 && userRes.data.data) {
-          members = userRes.data.data
-        } else {
-          message.error(userRes.data.message || '获取成员信息失败')
-        }
-      }
-
-      const loginRes = await getLoginUserUsingGet()
-      if (loginRes.data.code === 0 && loginRes.data.data) {
-        const currentUserVO = loginRes.data.data
-        members.push(currentUserVO)
-      }
-
-      roomMembers.value = members
-
-      modalVisible.value = true
-      if (currentRoom.value?.id !== undefined) {
-        connect(currentRoom.value.id)
-      } else {
-        message.error("房间ID无效，无法连接 WebSocket")
-      }
-
-      await loadRooms()
-    } else {
-      message.error(res.data.message || '加入房间失败')
+    const joinRes = await joinRoomUsingGet({ roomId });
+    if (joinRes.data.code !== 0) {
+      message.error(joinRes.data.message || '加入房间失败');
+      return;
     }
-  } catch (error) {
-    message.error('加入房间失败')
-    console.error(error)
+    message.success('加入房间成功');
+
+    const { room, members } = await fetchRoomDetailAndMembers(roomId);
+    currentRoom.value = room;
+    roomMembers.value = members;
+
+    modalVisible.value = true;
+    if (currentRoom.value?.id !== undefined) {
+      connect(currentRoom.value.id);
+    } else {
+      message.error('房间ID无效，无法连接 WebSocket');
+    }
+
+    await loadRooms();
+  } catch (error: any) {
+    message.error(error.message || '加入房间失败');
+    console.error(error);
   }
-}
+};
 
 const handleQuitRoom = async () => {
   if (!currentRoom.value?.id) {
@@ -257,6 +237,7 @@ const handleQuitRoom = async () => {
     if (res.data.code === 0) {
       message.success('已退出房间')
       modalVisible.value = false
+      disconnect()
       await loadRooms()
       roomMembers.value = []
       currentRoom.value = undefined
@@ -285,16 +266,55 @@ const formatTime = (timestamp: number | string | undefined) => {
   return date.toLocaleString('zh-CN')
 }
 
-function handleWsMessage(data: any) {
-  if (data.type === "INFO" && data.user) {
-    // 判断是否已在房间成员中，避免重复
-    const exists = roomMembers.value.some(u => u.id == data.user.id)
-    if (!exists) {
-      roomMembers.value.push(data.user)
+const handleWsMessage = async (data: any) => {
+  if (!data?.type) return;
+
+  const roomId = currentRoom.value?.id;
+  if (!roomId) return;
+
+  switch (data.type) {
+    case 'JOIN_ROOM':
+    case 'LEAVE_ROOM': {
+      // 重新拉取房间和成员信息
+      try {
+        const { room, members } = await fetchRoomDetailAndMembers(roomId);
+        currentRoom.value = room;
+        roomMembers.value = members;
+      } catch (error: any) {
+        message.error(error.message || '刷新房间信息失败');
+      }
+      message.info(data.message);
+      break;
     }
-    message.info(data.message)
+    default: {
+      message.info(data.message);
+    }
   }
-}
+};
+const { ws, connect, disconnect } = useWebSocket(handleWsMessage)
+
+const fetchRoomDetailAndMembers = async (roomId: number) => {
+  const detailRes = await getRoomUsingGet({ roomId });
+  if (detailRes.data.code !== 0 || !detailRes.data.data) {
+    throw new Error(detailRes.data.message || '获取房间详情失败');
+  }
+  const room = detailRes.data.data;
+
+  let members: API.UserVO[] = [];
+  const playerIds = room.playerIds;
+  if (playerIds && playerIds.length > 0) {
+    const userRes = await batchGetUsersUsingPost({ userIdList: playerIds });
+    if (userRes.data.code === 0 && userRes.data.data) {
+      members = userRes.data.data;
+    } else {
+      throw new Error(userRes.data.message || '获取成员信息失败');
+    }
+  }
+  return {
+    room,
+    members
+  };
+};
 
 const handleReady = () => {
   // TODO: 实现准备逻辑，例如调用接口更新用户状态等
