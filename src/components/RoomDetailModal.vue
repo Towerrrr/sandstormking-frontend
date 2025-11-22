@@ -31,13 +31,16 @@
         <div class="avatars">
           <div
             v-for="member in members"
-            :key="member.id"
-            class="avatar-item"
+            :key="member.userVo?.id"
+            :class="['avatar-item', {
+              'avatar-owner': isOwner(member),
+              'avatar-ready': isReady(member),
+              'avatar-unready': !isReady(member) && !isOwner(member),
+            }]"
           >
-            <a-avatar :src="member.userAvatar" :size="48" />
-            <div class="name">{{ member.userName ?? '无名' }}</div>
+            <a-avatar :src="member.userVo?.userAvatar" :size="48" />
+            <div class="name">{{ member.userVo?.userName ?? '无名' }}</div>
           </div>
-          <!-- 补齐最多8个头像位，空位显示加号灰色头像 -->
           <div
             v-for="i in emptySlots"
             :key="'empty-' + i"
@@ -78,7 +81,7 @@ const props = defineProps<{
     ownerId?: number
     createdTime?: number | string
   }
-  members: API.UserVO[]
+  members: RoomMember[]
   readyLoading?: boolean
 }>()
 
@@ -111,6 +114,13 @@ function formatTime(timestamp: number | string | undefined) {
   return date.toLocaleString('zh-CN')
 }
 
+function isOwner(member: RoomMember) {
+  return member.userVo?.id === props.room?.ownerId;
+}
+
+function isReady(member: RoomMember) {
+  return !!member.ready;
+}
 async function fetchOwnerUser(ownerId?: number) {
   if (!ownerId) {
     ownerUser.value = null
@@ -178,5 +188,21 @@ watch(
 }
 .footer-btn {
   margin-top: 24px;
+}
+.avatar-item {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  padding: 2px;
+  transition: border 0.2s;
+}
+.avatar-owner {
+  border-color: #ffd600 !important;
+}
+.avatar-ready {
+  border-color: #52c41a !important;
+}
+.avatar-unready {
+  border-color: #ff4d4f !important;
 }
 </style>

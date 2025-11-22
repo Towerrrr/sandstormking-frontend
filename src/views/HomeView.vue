@@ -122,7 +122,7 @@ const roomForm = ref<API.RoomAddRequest>({
 
 const modalVisible = ref(false)
 const currentRoom = ref<API.Room>()
-const roomMembers = ref<API.UserVO[]>([])
+const roomMembers = ref<RoomMember[]>([])
 const isReadyLoading = ref(false)
 
 const loadRooms = async () => {
@@ -161,11 +161,14 @@ const handleAddRoom = async () => {
 
       currentRoom.value = res.data.data
 
-      let members: API.UserVO[] = []
+      let members: RoomMember[] = []
       const loginRes = await getLoginUserUsingGet()
       if (loginRes.data.code === 0 && loginRes.data.data) {
         const currentUserVO = loginRes.data.data
-        members.push(currentUserVO)
+        members.push({
+          userVo: currentUserVO,
+          ready: false
+        })
       }
       roomMembers.value = members
 
@@ -298,22 +301,26 @@ const fetchRoomDetailAndMembers = async (roomId: number) => {
   }
   const room = detailRes.data.data;
 
-  let members: API.UserVO[] = [];
+  let members: RoomMember[] = [];
   const roomMembersArr = room.roomMembers;
-  const userIdList = roomMembersArr?.map((m: API.RoomMember) => m.userId).filter(Boolean) || [];
-  if (userIdList.length > 0) {
-    const userIdList = roomMembersArr?.map((m: API.RoomMember) => m.userId).filter((id): id is number => id !== undefined) || [];
-    const userRes = await batchGetUsersUsingPost({ userIdList });
-    if (userRes.data.code === 0 && userRes.data.data) {
-      members = userRes.data.data;
-    } else {
-      throw new Error(userRes.data.message || '获取成员信息失败');
+  if (roomMembersArr && roomMembersArr.length > 0) {
+    const userIdList = roomMembersArr.map((m: API.RoomMember) => m.userId).filter((id): id is number => id !== undefined);
+    if (userIdList.length > 0) {
+      const userRes = await batchGetUsersUsingPost({ userIdList });
+      if (userRes.data.code === 0 && userRes.data.data) {
+        members = roomMembersArr.map((roomMember: API.RoomMember) => ({
+          userVo: userRes.data.data?.find(user => user.id === roomMember.userId) || undefined,
+          ready: roomMember.ready
+        }));
+      } else {
+        throw new Error(userRes.data.message || '获取成员信息失败');
+      }
     }
   }
-  return {
-    room,
-    members
-  };
+return {
+  room,
+  members
+};
 };
 
 const handleReady = () => {
