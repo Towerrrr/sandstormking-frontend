@@ -29,19 +29,16 @@
       <div class="member-list">
         <div class="member-title">成员({{ members.length }}/{{ room?.maxPlayers || 8 }})</div>
         <div class="avatars">
-          <div
-            v-for="member in members"
-            :key="member.userVo?.id"
-            :class="[
-              'avatar-item',
-              {
+          <div v-for="member in members" :key="member.userVo?.id" class="avatar-item">
+            <a-avatar
+              :src="member.userVo?.userAvatar"
+              :size="48"
+              :class="{
                 'avatar-owner': isOwner(member),
                 'avatar-ready': isReady(member),
                 'avatar-unready': !isReady(member) && !isOwner(member),
-              },
-            ]"
-          >
-            <a-avatar :src="member.userVo?.userAvatar" :size="48" />
+              }"
+            />
             <div class="name">{{ member.userVo?.userName ?? '无名' }}</div>
           </div>
           <div v-for="i in emptySlots" :key="'empty-' + i" class="avatar-item avatar-empty">
@@ -220,11 +217,14 @@ watch(
 }
 .avatar-owner {
   border-color: #ffd600 !important;
+  border-width: 2px !important;
 }
 .avatar-ready {
-  border-color: #52c41a !important;
+  border-color: #52C41A !important;
+  border-width: 2px !important;
 }
 .avatar-unready {
   border-color: #ff4d4f !important;
+  border-width: 2px !important;
 }
 </style>
