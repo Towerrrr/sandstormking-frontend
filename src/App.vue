@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { useLoginUserStore } from './stores/user'
+import { useDisableMobilePullToRefresh } from '@/hooks/useDisableMobilePullToRefresh'
 
 const loginUserStore = useLoginUserStore()
 loginUserStore.fetchLoginUser()
+useDisableMobilePullToRefresh()
 </script>
 
 <template>
@@ -11,6 +13,10 @@ loginUserStore.fetchLoginUser()
 </template>
 
 <style scoped>
+html, body {
+  overscroll-behavior-y: contain;
+}
+
 header {
   line-height: 1.5;
   max-height: 100vh;
