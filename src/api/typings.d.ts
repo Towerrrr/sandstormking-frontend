@@ -96,6 +96,11 @@ declare namespace API {
     roomId: number
   }
 
+  type ReadyRequest = {
+    ready?: boolean
+    roomId?: number
+  }
+
   type Room = {
     createdTime?: number
     id?: number
@@ -113,6 +118,11 @@ declare namespace API {
   type RoomMember = {
     ready?: boolean
     userId?: number
+  }
+
+  type startGameUsingGETParams = {
+    /** roomId */
+    roomId: number
   }
 
   type User = {

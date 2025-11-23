@@ -73,3 +73,30 @@ export async function quitRoomUsingGet(
     ...(options || {}),
   })
 }
+
+/** ready POST /api/room/ready */
+export async function readyUsingPost(body: API.ReadyRequest, options?: { [key: string]: any }) {
+  return request<API.BaseResponseBoolean_>('/api/room/ready', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** startGame GET /api/room/start */
+export async function startGameUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.startGameUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/room/start', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}

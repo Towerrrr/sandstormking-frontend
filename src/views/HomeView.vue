@@ -30,7 +30,6 @@
                 <template #title>
                   <div class="room-title">
                     <span>{{ room.name }}</span>
-                    <a-tag v-if="room.ownerId === currentUserId" color="blue"> 房主 </a-tag>
                   </div>
                 </template>
 
@@ -87,6 +86,7 @@
           :room="currentRoom"
           :members="roomMembers"
           :ready-loading="isReadyLoading"
+          :is-current-user-ready="isCurrentUserReady"
           @cancel="handleQuitRoom"
           @ready="handleReady"
         />
@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h } from 'vue'
+import { ref, onMounted, h, computed } from 'vue'
 import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
@@ -110,10 +110,13 @@ import {
   addRoomUsingPost,
   quitRoomUsingGet,
   getRoomUsingGet,
+  startGameUsingGet,
+  readyUsingPost,
 } from '@/api/roomController'
 import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { useLoginUserStore } from '@/stores/user'
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -133,6 +136,9 @@ const modalVisible = ref(false)
 const currentRoom = ref<API.Room>()
 const roomMembers = ref<RoomMember[]>([])
 const isReadyLoading = ref(false)
+
+const userStore = useLoginUserStore()
+
 
 const loadRooms = async () => {
   loading.value = true
@@ -293,11 +299,15 @@ const handleWsMessage = async (data: any) => {
       } catch (error: any) {
         message.error(error.message || '刷新房间信息失败')
       }
-      message.info(data.message)
+      if (data.message && data.message.trim() !== '') {
+        message.info(data.message)
+      }
       break
     }
     default: {
-      message.info(data.message)
+      if (data.message && data.message.trim() !== '') {
+        message.info(data.message)
+      }
     }
   }
 }
@@ -334,12 +344,54 @@ const fetchRoomDetailAndMembers = async (roomId: number) => {
   }
 }
 
-const handleReady = () => {
-  // TODO: 实现准备逻辑，例如调用接口更新用户状态等
-  message.info('点击了准备按钮')
+const isCurrentUserReady = computed(() => {
+  if (!currentUserId.value || roomMembers.value.length === 0) {
+    return false;
+  }
+
+  const currentUser = roomMembers.value.find(
+    (m) => m.userVo?.id === currentUserId.value
+  );
+
+  return currentUser?.ready ?? false;
+});
+
+const handleReady = async () => {
+  if (!currentRoom.value?.id) {
+    message.warning('房间ID无效，无法准备/取消准备')
+    return
+  }
+  const targetReady = !isCurrentUserReady.value
+  isReadyLoading.value = true
+  try {
+    const res = await readyUsingPost({
+      ready: targetReady,
+      roomId: currentRoom.value.id,
+    })
+    if (res.data.code === 0) {
+      message.success(targetReady ? '已准备' : '已取消准备')
+      if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+        ws.value.send(
+          JSON.stringify({
+            type: 'ROOM_STATE_CHANGED',
+            data: targetReady ? '用户准备状态改变' : '用户取消准备',
+          }),
+        )
+      }
+    } else {
+      message.error(res.data.message || (targetReady ? '准备失败' : '取消准备失败'))
+    }
+  } catch (error) {
+    message.error(targetReady ? '准备失败' : '取消准备失败')
+    console.error(error)
+  } finally {
+    isReadyLoading.value = false
+  }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await userStore.fetchLoginUser()
+  currentUserId.value = userStore.loginUser.id
   loadRooms()
 })
 </script>

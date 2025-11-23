@@ -56,8 +56,14 @@
         </div>
       </div>
       <div class="footer-btn">
-        <a-button type="primary" block @click="onReady" :loading="readyLoading">
-          准备
+        <a-button
+          type="primary"
+          :danger="props.isCurrentUserReady"
+          block
+          @click="onReady"
+          :loading="readyLoading"
+        >
+          {{ props.isCurrentUserReady ? '取消准备' : '准备' }}
         </a-button>
       </div>
     </div>
@@ -83,6 +89,7 @@ const props = defineProps<{
   }
   members: RoomMember[]
   readyLoading?: boolean
+  isCurrentUserReady?: boolean
 }>()
 
 const emit = defineEmits<{
