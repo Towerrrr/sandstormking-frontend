@@ -87,8 +87,10 @@
           :members="roomMembers"
           :ready-loading="isReadyLoading"
           :is-current-user-ready="isCurrentUserReady"
+          :is-owner="isOwner"
           @cancel="handleQuitRoom"
           @ready="handleReady"
+          @start-game="handleStartGame"
         />
       </a-layout-content>
       <a-layout-footer class="footer">
@@ -138,7 +140,6 @@ const roomMembers = ref<RoomMember[]>([])
 const isReadyLoading = ref(false)
 
 const userStore = useLoginUserStore()
-
 
 const loadRooms = async () => {
   loading.value = true
@@ -304,6 +305,11 @@ const handleWsMessage = async (data: any) => {
       }
       break
     }
+    case 'START_GAME': {
+      message.success('游戏开始')
+      // TODO 跳转到游戏页面
+      break
+    }
     default: {
       if (data.message && data.message.trim() !== '') {
         message.info(data.message)
@@ -346,15 +352,20 @@ const fetchRoomDetailAndMembers = async (roomId: number) => {
 
 const isCurrentUserReady = computed(() => {
   if (!currentUserId.value || roomMembers.value.length === 0) {
-    return false;
+    return false
   }
 
-  const currentUser = roomMembers.value.find(
-    (m) => m.userVo?.id === currentUserId.value
-  );
+  const currentUser = roomMembers.value.find((m) => m.userVo?.id === currentUserId.value)
 
-  return currentUser?.ready ?? false;
-});
+  return currentUser?.ready ?? false
+})
+
+const isOwner = computed<boolean | undefined>(() => {
+  if (currentUserId.value === undefined || currentRoom.value?.ownerId === undefined) {
+    return undefined
+  }
+  return currentRoom.value.ownerId === currentUserId.value
+})
 
 const handleReady = async () => {
   if (!currentRoom.value?.id) {
@@ -383,6 +394,46 @@ const handleReady = async () => {
     }
   } catch (error) {
     message.error(targetReady ? '准备失败' : '取消准备失败')
+    console.error(error)
+  } finally {
+    isReadyLoading.value = false
+  }
+}
+
+const handleStartGame = async () => {
+  const roomId = currentRoom.value?.id
+  if (roomId === undefined) {
+    message.warning('房间ID无效，无法开始游戏')
+    return
+  }
+
+  isReadyLoading.value = true
+  try {
+    const { room, members } = await fetchRoomDetailAndMembers(roomId)
+    currentRoom.value = room
+    roomMembers.value = members
+
+    const notReadyMembers = members.filter((m) => m.userVo?.id !== room.ownerId && !m.ready)
+    if (notReadyMembers.length > 0) {
+      message.warning('还有成员未准备，无法开始游戏')
+      return
+    }
+
+    const res = await startGameUsingGet({ roomId })
+    if (res.data.code === 0) {
+      if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+        ws.value.send(
+          JSON.stringify({
+            type: 'START_GAME',
+            data: '游戏开始',
+          }),
+        )
+      }
+    } else {
+      message.error(res.data.message || '开始游戏失败')
+    }
+  } catch (error) {
+    message.error('开始游戏失败')
     console.error(error)
   } finally {
     isReadyLoading.value = false

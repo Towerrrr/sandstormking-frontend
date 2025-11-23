@@ -32,31 +32,40 @@
           <div
             v-for="member in members"
             :key="member.userVo?.id"
-            :class="['avatar-item', {
-              'avatar-owner': isOwner(member),
-              'avatar-ready': isReady(member),
-              'avatar-unready': !isReady(member) && !isOwner(member),
-            }]"
+            :class="[
+              'avatar-item',
+              {
+                'avatar-owner': isOwner(member),
+                'avatar-ready': isReady(member),
+                'avatar-unready': !isReady(member) && !isOwner(member),
+              },
+            ]"
           >
             <a-avatar :src="member.userVo?.userAvatar" :size="48" />
             <div class="name">{{ member.userVo?.userName ?? '无名' }}</div>
           </div>
-          <div
-            v-for="i in emptySlots"
-            :key="'empty-' + i"
-            class="avatar-item avatar-empty"
-          >
-            <a-avatar :size="48" style="background: #f0f0f0;">
+          <div v-for="i in emptySlots" :key="'empty-' + i" class="avatar-item avatar-empty">
+            <a-avatar :size="48" style="background: #f0f0f0">
               <template #icon>
                 <PlusOutlined />
               </template>
             </a-avatar>
-            <div class="name" style="color:#aaa">空位</div>
+            <div class="name" style="color: #aaa">空位</div>
           </div>
         </div>
       </div>
       <div class="footer-btn">
         <a-button
+          v-if="props.isOwner"
+          type="primary"
+          block
+          @click="onStartGame"
+          :loading="readyLoading"
+        >
+          开始游戏
+        </a-button>
+        <a-button
+          v-else
           type="primary"
           :danger="props.isCurrentUserReady"
           block
@@ -90,12 +99,14 @@ const props = defineProps<{
   members: RoomMember[]
   readyLoading?: boolean
   isCurrentUserReady?: boolean
+  isOwner?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
   (e: 'cancel'): void
   (e: 'ready'): void
+  (e: 'start-game'): void
 }>()
 
 const emptySlots = computed(() => {
@@ -115,6 +126,10 @@ function onReady() {
   emit('ready')
 }
 
+function onStartGame() {
+  emit('start-game')
+}
+
 function formatTime(timestamp: number | string | undefined) {
   if (!timestamp) return '-'
   const date = new Date(Number(timestamp))
@@ -122,11 +137,11 @@ function formatTime(timestamp: number | string | undefined) {
 }
 
 function isOwner(member: RoomMember) {
-  return member.userVo?.id === props.room?.ownerId;
+  return member.userVo?.id === props.room?.ownerId
 }
 
 function isReady(member: RoomMember) {
-  return !!member.ready;
+  return !!member.ready
 }
 async function fetchOwnerUser(ownerId?: number) {
   if (!ownerId) {
@@ -147,7 +162,7 @@ watch(
   (ownerId) => {
     fetchOwnerUser(ownerId)
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 
