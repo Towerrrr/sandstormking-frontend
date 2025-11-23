@@ -8,26 +8,29 @@
         <div class="room-container">
           <div class="room-header">
             <h2>（╯°Д°）╯︵/(.□ . )</h2>
-            <a-button type="primary" shape="circle" :icon="h(RetweetOutlined)" @click="handleRefresh" />
-            <a-button type="primary" shape="circle" :icon="h(PlusOutlined)" @click="showAddModal = true" />
+            <a-button
+              type="primary"
+              shape="circle"
+              :icon="h(RetweetOutlined)"
+              @click="handleRefresh"
+            />
+            <a-button
+              type="primary"
+              shape="circle"
+              :icon="h(PlusOutlined)"
+              @click="showAddModal = true"
+            />
           </div>
 
           <a-spin :spinning="loading">
             <a-empty v-if="!loading && roomList.length === 0" description="暂无房间" />
 
             <div v-else class="room-list">
-              <a-card
-                v-for="room in roomList"
-                :key="room.id"
-                class="room-card"
-                hoverable
-              >
+              <a-card v-for="room in roomList" :key="room.id" class="room-card" hoverable>
                 <template #title>
                   <div class="room-title">
                     <span>{{ room.name }}</span>
-                    <a-tag v-if="room.ownerId === currentUserId" color="blue">
-                      房主
-                    </a-tag>
+                    <a-tag v-if="room.ownerId === currentUserId" color="blue"> 房主 </a-tag>
                   </div>
                 </template>
 
@@ -101,9 +104,15 @@ import { message } from 'ant-design-vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import RoomAddModal from '@/components/RoomAddModal.vue'
 import RoomDetailModal from '@/components/RoomDetailModal.vue'
-import { listRoomsUsingGet, joinRoomUsingGet, addRoomUsingPost, quitRoomUsingGet, getRoomUsingGet } from '@/api/roomController'
+import {
+  listRoomsUsingGet,
+  joinRoomUsingGet,
+  addRoomUsingPost,
+  quitRoomUsingGet,
+  getRoomUsingGet,
+} from '@/api/roomController'
 import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
-import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
 import { useWebSocket } from '@/composables/useWebSocket'
 
 const loading = ref(false)
@@ -117,7 +126,7 @@ const showAddModal = ref(false)
 const addLoading = ref(false)
 const roomForm = ref<API.RoomAddRequest>({
   name: '新房间',
-  maxPlayers: 3
+  maxPlayers: 3,
 })
 
 const modalVisible = ref(false)
@@ -167,7 +176,7 @@ const handleAddRoom = async () => {
         const currentUserVO = loginRes.data.data
         members.push({
           userVo: currentUserVO,
-          ready: false
+          ready: false,
         })
       }
       roomMembers.value = members
@@ -176,7 +185,7 @@ const handleAddRoom = async () => {
       if (currentRoom.value?.id !== undefined) {
         connect(currentRoom.value.id)
       } else {
-        message.error("房间ID无效，无法连接 WebSocket")
+        message.error('房间ID无效，无法连接 WebSocket')
       }
 
       resetForm()
@@ -195,40 +204,40 @@ const handleAddRoom = async () => {
 const resetForm = () => {
   roomForm.value = {
     name: '新房间',
-    maxPlayers: 3
+    maxPlayers: 3,
   }
 }
 const handleJoinRoom = async (roomId: number | undefined) => {
   if (!roomId) {
-    message.warning('房间ID无效');
-    return;
+    message.warning('房间ID无效')
+    return
   }
 
   try {
-    const joinRes = await joinRoomUsingGet({ roomId });
+    const joinRes = await joinRoomUsingGet({ roomId })
     if (joinRes.data.code !== 0) {
-      message.error(joinRes.data.message || '加入房间失败');
-      return;
+      message.error(joinRes.data.message || '加入房间失败')
+      return
     }
-    message.success('加入房间成功');
+    message.success('加入房间成功')
 
-    const { room, members } = await fetchRoomDetailAndMembers(roomId);
-    currentRoom.value = room;
-    roomMembers.value = members;
+    const { room, members } = await fetchRoomDetailAndMembers(roomId)
+    currentRoom.value = room
+    roomMembers.value = members
 
-    modalVisible.value = true;
+    modalVisible.value = true
     if (currentRoom.value?.id !== undefined) {
-      connect(currentRoom.value.id);
+      connect(currentRoom.value.id)
     } else {
-      message.error('房间ID无效，无法连接 WebSocket');
+      message.error('房间ID无效，无法连接 WebSocket')
     }
 
-    await loadRooms();
+    await loadRooms()
   } catch (error: any) {
-    message.error(error.message || '加入房间失败');
-    console.error(error);
+    message.error(error.message || '加入房间失败')
+    console.error(error)
   }
-};
+}
 
 const handleQuitRoom = async () => {
   if (!currentRoom.value?.id) {
@@ -270,58 +279,60 @@ const formatTime = (timestamp: number | string | undefined) => {
 }
 
 const handleWsMessage = async (data: any) => {
-  if (!data?.type) return;
+  if (!data?.type) return
 
-  const roomId = currentRoom.value?.id;
-  if (!roomId) return;
+  const roomId = currentRoom.value?.id
+  if (!roomId) return
 
   switch (data.type) {
     case 'ROOM_STATE_CHANGED': {
       try {
-        const { room, members } = await fetchRoomDetailAndMembers(roomId);
-        currentRoom.value = room;
-        roomMembers.value = members;
+        const { room, members } = await fetchRoomDetailAndMembers(roomId)
+        currentRoom.value = room
+        roomMembers.value = members
       } catch (error: any) {
-        message.error(error.message || '刷新房间信息失败');
+        message.error(error.message || '刷新房间信息失败')
       }
-      message.info(data.message);
-      break;
+      message.info(data.message)
+      break
     }
     default: {
-      message.info(data.message);
+      message.info(data.message)
     }
   }
-};
+}
 const { ws, connect, disconnect } = useWebSocket(handleWsMessage)
 
 const fetchRoomDetailAndMembers = async (roomId: number) => {
-  const detailRes = await getRoomUsingGet({ roomId });
+  const detailRes = await getRoomUsingGet({ roomId })
   if (detailRes.data.code !== 0 || !detailRes.data.data) {
-    throw new Error(detailRes.data.message || '获取房间详情失败');
+    throw new Error(detailRes.data.message || '获取房间详情失败')
   }
-  const room = detailRes.data.data;
+  const room = detailRes.data.data
 
-  let members: RoomMember[] = [];
-  const roomMembersArr = room.roomMembers;
+  let members: RoomMember[] = []
+  const roomMembersArr = room.roomMembers
   if (roomMembersArr && roomMembersArr.length > 0) {
-    const userIdList = roomMembersArr.map((m: API.RoomMember) => m.userId).filter((id): id is number => id !== undefined);
+    const userIdList = roomMembersArr
+      .map((m: API.RoomMember) => m.userId)
+      .filter((id): id is number => id !== undefined)
     if (userIdList.length > 0) {
-      const userRes = await batchGetUsersUsingPost({ userIdList });
+      const userRes = await batchGetUsersUsingPost({ userIdList })
       if (userRes.data.code === 0 && userRes.data.data) {
         members = roomMembersArr.map((roomMember: API.RoomMember) => ({
-          userVo: userRes.data.data?.find(user => user.id === roomMember.userId) || undefined,
-          ready: roomMember.ready
-        }));
+          userVo: userRes.data.data?.find((user) => user.id === roomMember.userId) || undefined,
+          ready: roomMember.ready,
+        }))
       } else {
-        throw new Error(userRes.data.message || '获取成员信息失败');
+        throw new Error(userRes.data.message || '获取成员信息失败')
       }
     }
   }
-return {
-  room,
-  members
-};
-};
+  return {
+    room,
+    members,
+  }
+}
 
 const handleReady = () => {
   // TODO: 实现准备逻辑，例如调用接口更新用户状态等
