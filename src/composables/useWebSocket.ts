@@ -1,3 +1,4 @@
+import config from '@/config'
 import { ref, onUnmounted } from 'vue'
 
 export function useWebSocket(onMessage?: (data: any) => void) {
@@ -6,8 +7,8 @@ export function useWebSocket(onMessage?: (data: any) => void) {
   function connect(roomId: number) {
     // todo 后续看一下怎么改
     // const host = window.location.host
-    const host = 'localhost:8223'
-    const url = `ws://${host}/api/game/play?roomId=${roomId}`
+    const host = config.WS_BASE_URL
+    const url = `http://${host}/api/game/play?roomId=${roomId}`
 
     ws.value = new WebSocket(url)
 

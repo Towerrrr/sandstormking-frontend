@@ -30,6 +30,7 @@
         <div class="member-title">成员({{ members.length }}/{{ room?.maxPlayers || 8 }})</div>
         <div class="avatars">
           <div v-for="member in members" :key="member.userVo?.id" class="avatar-item">
+            <!-- todo 成员以准备状态称为房主时，外框没有渲染成黄色 -->
             <a-avatar
               :src="member.userVo?.userAvatar"
               :size="48"
