@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import UserLoginView from '@/views/user/UserLoginView.vue'
 import UserRegisterView from '@/views/user/UserRegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
+import ChallengerView from '@/views/ChallengerView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +22,11 @@ const router = createRouter({
       name: '用户注册',
       component: UserRegisterView,
     },
+    {
+      path: '/challenger',
+      name: '挑战者',
+      component: ChallengerView,
+    }
   ],
 })
 
