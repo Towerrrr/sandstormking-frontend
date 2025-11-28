@@ -1,7 +1,7 @@
 <template>
   <div id="gameView">
     <div class="game-container">
-      <!-- 顶部计分区域 -->
+      <!-- 顶部切换战场 -->
       <div class="top-tabs">
         <div
           v-for="tab in tabs"
@@ -17,14 +17,9 @@
       <!-- 游戏区域 -->
       <div class="game-area">
         <!-- 对手区域 (上方) -->
-        <div class="opponent-area">
-          <!-- 对手手牌区 -->
-          <div class="hand-cards opponent-hand">
-            <div v-for="i in 6" :key="'opponent-' + i" class="card-slot card-back"></div>
-          </div>
-
-          <!-- 对手场上区域 -->
-          <div class="play-area opponent-play">
+        <div class="player-area">
+          <!-- 玩家场上区域 -->
+          <div class="play-area">
             <div class="card-slot empty-slot"></div>
             <div class="deck-pile"></div>
             <a-avatar :size="56" class="player-avatar">
@@ -32,6 +27,29 @@
                 <UserOutlined />
               </template>
             </a-avatar>
+          </div>
+
+          <!-- 玩家手牌区 -->
+          <div class="hand-cards">
+            <div class="battle-row">
+              <div
+                v-for="i in 3"
+                :key="'player-' + i"
+                class="card-slot empty-slot"
+                @click="handleCardClick(i)"
+              ></div>
+            </div>
+            <div class="battle-row">
+              <div
+                v-for="i in 2"
+                :key="'player-' + i"
+                class="card-slot empty-slot"
+                @click="handleCardClick(i)"
+              ></div>
+              <div
+                class="card-slot"
+              ></div>
+            </div>
           </div>
         </div>
 
@@ -59,7 +77,7 @@
         <!-- 玩家区域 (下方) -->
         <div class="player-area">
           <!-- 玩家场上区域 -->
-          <div class="play-area player-play">
+          <div class="play-area">
             <div class="card-slot empty-slot"></div>
             <div class="deck-pile"></div>
             <a-avatar :size="56" class="player-avatar">
@@ -70,19 +88,29 @@
           </div>
 
           <!-- 玩家手牌区 -->
-          <div class="hand-cards player-hand">
-            <div
-              v-for="i in 6"
-              :key="'player-' + i"
-              class="card-slot empty-slot"
-              @click="handleCardClick(i)"
-            ></div>
+          <div class="hand-cards">
+            <div class="battle-row">
+              <div
+                v-for="i in 3"
+                :key="'player-' + i"
+                class="card-slot empty-slot"
+                @click="handleCardClick(i)"
+              ></div>
+            </div>
+            <div class="battle-row">
+              <div
+                v-for="i in 3"
+                :key="'player-' + i"
+                class="card-slot empty-slot"
+                @click="handleCardClick(i)"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- 底部标签页切换 -->
-      <div class="tab-bar">
+      <!-- <div class="tab-bar">
         <a-tabs v-model:activeKey="activeTab1" centered>
           <a-tab-pane key="1" tab="手牌">
             <div class="tab-content">当前手牌信息</div>
@@ -97,7 +125,7 @@
             <div class="tab-content">游戏设置选项</div>
           </a-tab-pane>
         </a-tabs>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -196,7 +224,7 @@ const handleCardClick = (index: number) => {
 .game-area {
   background: linear-gradient(180deg, #3d6b20 0%, #5a8f35 50%, #3d6b20 100%);
   border-radius: 12px;
-  padding: 24px;
+  padding: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   margin-bottom: 16px;
 }
@@ -216,19 +244,24 @@ const handleCardClick = (index: number) => {
 /* 手牌 */
 .hand-cards {
   display: flex;
-  justify-content: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .card-slot {
-  width: 70px;
-  height: 100px;
+  width: 60px;
+  height: 96px;
   border: 2px solid #666;
   border-radius: 8px;
   background: white;
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* todo 下面是实验属性 */
+  background-image: url('https://ark-1358327410.cos.ap-nanjing.myqcloud.com/%E9%AA%B7%E9%AB%85.png');
+  background-size: cover;     /* 覆盖整个容器 */
+  background-position: center; /* 居中显示 */
+  background-repeat: no-repeat;
 }
 
 .card-slot:hover {
@@ -253,10 +286,11 @@ const handleCardClick = (index: number) => {
 /* 场上区域 */
 .play-area {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 40px;
-  padding: 16px;
+  gap: 0;
+  padding: 0;
 }
 
 .opponent-play {
@@ -287,26 +321,23 @@ const handleCardClick = (index: number) => {
   font-size: 14px;
 }
 
-.player-avatar,
-.opponent-avatar {
-  border: 3px solid #ffd700;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+.player-avatar {
   background: #f0f0f0;
 }
 
 /* 战场区域 */
 .battlefield {
-  margin: 24px 0;
+  margin: 0 0;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  padding: 16px;
+  padding: 0;
 }
 
 .battle-row {
   display: flex;
   justify-content: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 0 0;
 }
 
 .opponent-battle {
@@ -315,7 +346,7 @@ const handleCardClick = (index: number) => {
 
 .battle-slot {
   width: 90px;
-  height: 130px;
+  height: 100px;
   border: 2px solid #666;
   border-radius: 8px;
   background: white;
@@ -335,17 +366,7 @@ const handleCardClick = (index: number) => {
 
 /* 玩家区域 */
 .player-area {
-  margin-top: 20px;
-}
-
-.player-play {
-  margin-bottom: 16px;
-}
-
-.player-hand {
   display: flex;
-  justify-content: center;
-  gap: 8px;
 }
 
 /* 标签页 */
@@ -363,40 +384,4 @@ const handleCardClick = (index: number) => {
   min-height: 60px;
 }
 
-.footer {
-  background: #efefef;
-  padding: 16px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  text-align: center;
-  z-index: 100;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .card-slot {
-    width: 50px;
-    height: 70px;
-  }
-
-  .battle-slot {
-    width: 60px;
-    height: 90px;
-  }
-
-  .deck-pile {
-    width: 60px;
-    height: 85px;
-  }
-
-  .score-board {
-    gap: 40px;
-  }
-
-  .play-area {
-    gap: 20px;
-  }
-}
 </style>
