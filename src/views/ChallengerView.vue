@@ -1,5 +1,5 @@
 <template>
-  <div id="gameView">
+  <div id="challengerView">
     <div class="game-container">
       <!-- 顶部切换战场 -->
       <div class="top-tabs">
@@ -18,19 +18,8 @@
       <div class="game-area">
         <!-- 对手区域 (上方) -->
         <div class="player-area">
-          <!-- 玩家场上区域 -->
-          <div class="play-area">
-            <div class="card-slot empty-slot"></div>
-            <div class="deck-pile"></div>
-            <a-avatar :size="56" class="player-avatar">
-              <template #icon>
-                <UserOutlined />
-              </template>
-            </a-avatar>
-          </div>
-
-          <!-- 玩家手牌区 -->
-          <div class="hand-cards">
+          <!-- 手牌、休息区、消耗牌堆 -->
+          <div class="player-card-area">
             <div class="battle-row">
               <div
                 v-for="i in 3"
@@ -38,48 +27,51 @@
                 class="card-slot empty-slot"
                 @click="handleCardClick(i)"
               ></div>
+              <div class="deck-pile"></div>
             </div>
             <div class="battle-row">
               <div
-                v-for="i in 2"
+                v-for="i in 3"
                 :key="'player-' + i"
                 class="card-slot empty-slot"
                 @click="handleCardClick(i)"
               ></div>
-              <div
-                class="card-slot"
-              ></div>
+              <div class="card-slot empty-slot"></div>
             </div>
+          </div>
+
+          <!-- 玩家信息 -->
+          <div class="player-info">
+            <a-avatar :size="56" class="player-avatar">
+              <template #icon>
+                <UserOutlined />
+              </template>
+            </a-avatar>
+
+            <a-button
+              type="text"
+              :title="isFullscreenActive ? '退出全屏' : '全屏'"
+              class="fullscreen-btn"
+              @click="handleFullscreen"
+            >
+              <FullscreenOutlined />
+            </a-button>
           </div>
         </div>
 
         <!-- 中央战场区域 -->
         <div class="battlefield">
           <!-- 对手战场 -->
-          <div class="battle-row opponent-battle">
-            <div
-              v-for="i in 4"
-              :key="'opp-battle-' + i"
-              class="battle-slot empty-battle-slot"
-            ></div>
-          </div>
+          <div class="card-slot empty-slot"></div>
 
           <!-- 玩家战场 -->
-          <div class="battle-row player-battle">
-            <div
-              v-for="i in 4"
-              :key="'player-battle-' + i"
-              class="battle-slot empty-battle-slot"
-            ></div>
-          </div>
+          <div class="card-slot empty-slot"></div>
         </div>
 
-        <!-- 玩家区域 (下方) -->
+        <!-- 我方区域 (下方) -->
         <div class="player-area">
-          <!-- 玩家场上区域 -->
-          <div class="play-area">
-            <div class="card-slot empty-slot"></div>
-            <div class="deck-pile"></div>
+          <!-- 玩家信息 -->
+          <div class="player-info">
             <a-avatar :size="56" class="player-avatar">
               <template #icon>
                 <UserOutlined />
@@ -87,8 +79,8 @@
             </a-avatar>
           </div>
 
-          <!-- 玩家手牌区 -->
-          <div class="hand-cards">
+          <!-- 手牌、休息区、消耗牌堆 -->
+          <div class="player-card-area">
             <div class="battle-row">
               <div
                 v-for="i in 3"
@@ -96,6 +88,7 @@
                 class="card-slot empty-slot"
                 @click="handleCardClick(i)"
               ></div>
+              <div class="deck-pile"></div>
             </div>
             <div class="battle-row">
               <div
@@ -104,6 +97,7 @@
                 class="card-slot empty-slot"
                 @click="handleCardClick(i)"
               ></div>
+              <div class="card-slot empty-slot"></div>
             </div>
           </div>
         </div>
@@ -132,18 +126,39 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { UserOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
+import { enterFullScreen, isFullScreen, exitFullScreen } from '@/hooks/fullscreen'
 
 const activeTab1 = ref('1')
 const activeTab = ref(1)
 const tabs = [1, 2, 3, 4]
 
+const isFullscreenActive = ref(false)
+
+const handleFullscreen = () => {
+  if (isFullScreen()) {
+    exitFullScreen()
+    isFullscreenActive.value = false
+  } else {
+    enterFullScreen()
+    isFullscreenActive.value = true
+  }
+}
+
+// 监听全屏变化，保证按钮状态同步
+document.addEventListener('fullscreenchange', () => {
+  isFullscreenActive.value = !!isFullScreen()
+})
 const handleCardClick = (index: number) => {
   console.log('点击了卡牌:', index)
 }
 </script>
 
 <style scoped>
+#challengerView {
+  height: 100%;
+}
+
 .header {
   position: fixed;
   width: 100%;
@@ -191,66 +206,25 @@ const handleCardClick = (index: number) => {
   height: 100%;
 }
 
-/* 计分板 */
-.score-board {
-  display: flex;
-  justify-content: center;
-  gap: 80px;
-  margin-bottom: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 12px 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.score-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 60px;
-  padding: 8px 16px;
-  border: 2px solid #333;
-  background: white;
-  border-radius: 4px;
-}
-
-.score-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-}
-
 /* 游戏区域 */
 .game-area {
+  width: 100%;
+  height: 100%;
   background: linear-gradient(180deg, #3d6b20 0%, #5a8f35 50%, #3d6b20 100%);
-  border-radius: 12px;
   padding: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   margin-bottom: 16px;
 }
 
-/* 对手区域 */
-.opponent-area {
-  margin-bottom: 20px;
-}
-
-.opponent-hand {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-/* 手牌 */
-.hand-cards {
+.player-card-area {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
 .card-slot {
-  width: 60px;
-  height: 96px;
+  width: 70px;
+  height: 90px;
   border: 2px solid #666;
   border-radius: 8px;
   background: white;
@@ -259,7 +233,7 @@ const handleCardClick = (index: number) => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   /* todo 下面是实验属性 */
   background-image: url('https://ark-1358327410.cos.ap-nanjing.myqcloud.com/%E9%AA%B7%E9%AB%85.png');
-  background-size: cover;     /* 覆盖整个容器 */
+  background-size: cover; /* 覆盖整个容器 */
   background-position: center; /* 居中显示 */
   background-repeat: no-repeat;
 }
@@ -293,13 +267,9 @@ const handleCardClick = (index: number) => {
   padding: 0;
 }
 
-.opponent-play {
-  flex-direction: row-reverse;
-}
-
 .deck-pile {
-  width: 80px;
-  height: 110px;
+  width: 70px;
+  height: 90px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid #444;
   border-radius: 8px;
@@ -327,6 +297,7 @@ const handleCardClick = (index: number) => {
 
 /* 战场区域 */
 .battlefield {
+  display: flex;
   margin: 0 0;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
@@ -340,33 +311,10 @@ const handleCardClick = (index: number) => {
   padding: 0 0;
 }
 
-.opponent-battle {
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.battle-slot {
-  width: 90px;
-  height: 100px;
-  border: 2px solid #666;
-  border-radius: 8px;
-  background: white;
-  transition: all 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.empty-battle-slot {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-}
-
-.battle-slot:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
 /* 玩家区域 */
 .player-area {
   display: flex;
+  flex-direction: column;
 }
 
 /* 标签页 */
@@ -383,5 +331,4 @@ const handleCardClick = (index: number) => {
   color: #666;
   min-height: 60px;
 }
-
 </style>

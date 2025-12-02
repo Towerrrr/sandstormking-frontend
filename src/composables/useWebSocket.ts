@@ -8,7 +8,7 @@ export function useWebSocket(onMessage?: (data: any) => void) {
     // todo 后续看一下怎么改
     // const host = window.location.host
     const host = config.WS_BASE_URL
-    const url = `http://${host}/api/game/play?roomId=${roomId}`
+    const url = `http://${host}/api/ws?roomId=${roomId}`
 
     ws.value = new WebSocket(url)
 
