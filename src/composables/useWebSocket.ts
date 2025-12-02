@@ -5,8 +5,6 @@ export function useWebSocket(onMessage?: (data: any) => void) {
   const ws = ref<WebSocket | null>(null)
 
   function connect(roomId: number) {
-    // todo 后续看一下怎么改
-    // const host = window.location.host
     const host = config.WS_BASE_URL
     const url = `http://${host}/api/ws?roomId=${roomId}`
 
@@ -39,6 +37,14 @@ export function useWebSocket(onMessage?: (data: any) => void) {
     }
   }
 
+  function sendMessage(message: any) {
+    if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+      ws.value.send(typeof message === 'string' ? message : JSON.stringify(message))
+    } else {
+      console.warn('WebSocket 未连接或已关闭，无法发送消息')
+    }
+  }
+
   onUnmounted(() => {
     disconnect()
   })
@@ -47,5 +53,6 @@ export function useWebSocket(onMessage?: (data: any) => void) {
     ws,
     connect,
     disconnect,
+    sendMessage,
   }
 }

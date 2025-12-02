@@ -119,6 +119,7 @@ import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userControll
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useLoginUserStore } from '@/stores/user'
+import { WSMessageTypeEnum } from '@/constants/wsMessageTypes'
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -292,7 +293,7 @@ const handleWsMessage = async (data: any) => {
   if (!roomId) return
 
   switch (data.type) {
-    case 'ROOM_STATE_CHANGED': {
+    case WSMessageTypeEnum.ROOM_STATE_CHANGED: {
       try {
         const { room, members } = await fetchRoomDetailAndMembers(roomId)
         currentRoom.value = room
@@ -305,7 +306,7 @@ const handleWsMessage = async (data: any) => {
       }
       break
     }
-    case 'START_GAME': {
+    case WSMessageTypeEnum.START_GAME: {
       message.success('游戏开始')
       // TODO 跳转到游戏页面
       break
@@ -317,7 +318,7 @@ const handleWsMessage = async (data: any) => {
     }
   }
 }
-const { ws, connect, disconnect } = useWebSocket(handleWsMessage)
+const { ws, connect, disconnect, sendMessage } = useWebSocket(handleWsMessage)
 
 const fetchRoomDetailAndMembers = async (roomId: number) => {
   const detailRes = await getRoomUsingGet({ roomId })
@@ -381,14 +382,10 @@ const handleReady = async () => {
     })
     if (res.data.code === 0) {
       message.success(targetReady ? '已准备' : '已取消准备')
-      if (ws.value && ws.value.readyState === WebSocket.OPEN) {
-        ws.value.send(
-          JSON.stringify({
-            type: 'ROOM_STATE_CHANGED',
-            data: targetReady ? '用户准备状态改变' : '用户取消准备',
-          }),
-        )
-      }
+      sendMessage({
+        type: WSMessageTypeEnum.ROOM_STATE_CHANGED,
+        data: targetReady ? '用户准备状态改变' : '用户取消准备',
+      })
     } else {
       message.error(res.data.message || (targetReady ? '准备失败' : '取消准备失败'))
     }
@@ -421,14 +418,10 @@ const handleStartGame = async () => {
 
     const res = await startGameUsingGet({ roomId })
     if (res.data.code === 0) {
-      if (ws.value && ws.value.readyState === WebSocket.OPEN) {
-        ws.value.send(
-          JSON.stringify({
-            type: 'START_GAME',
-            data: '游戏开始',
-          }),
-        )
-      }
+      sendMessage({
+        type: WSMessageTypeEnum.START_GAME,
+        data: '游戏开始',
+      })
     } else {
       message.error(res.data.message || '开始游戏失败')
     }
