@@ -120,6 +120,7 @@ import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
 import { useWebSocket } from '@/websocket/useWebSocket'
 import { useLoginUserStore } from '@/stores/user'
 import { WSMessageTypeEnum } from '@/websocket/MessageTypeEnums'
+import { wsRoomStateChanged } from '@/websocket/wsApi'
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
@@ -382,10 +383,7 @@ const handleReady = async () => {
     })
     if (res.data.code === 0) {
       message.success(targetReady ? '已准备' : '已取消准备')
-      sendMessage({
-        type: WSMessageTypeEnum.ROOM_STATE_CHANGED,
-        data: targetReady ? '用户准备状态改变' : '用户取消准备',
-      })
+      sendMessage(wsRoomStateChanged(targetReady ? '用户准备状态改变' : '用户取消准备'))
     } else {
       message.error(res.data.message || (targetReady ? '准备失败' : '取消准备失败'))
     }

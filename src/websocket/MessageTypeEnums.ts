@@ -7,11 +7,12 @@ export enum WSMessageTypeEnum {
 }
 
 export enum ChallengerMessageTypeEnum {
-  INIT_GAME = 'init_game',
-  END_GAME = 'end_game',
-  REFRESH = 'refresh',
-  DRAW_CARD = 'draw_card',
-  DRAW_AGAIN = 'draw_again',
-  CONFIRM_CHOICE = 'confirm_choice',
-  READY_BATTLE = 'readyBattle',
+  INIT_GAME = 'INIT_GAME',
+  END_GAME = 'END_GAME',
+  REFRESH = 'REFRESH',
+  DRAW_CARD = 'DRAW_CARD',
+  DRAW_AGAIN = 'DRAW_AGAIN',
+  CONFIRM_CHOICE = 'CONFIRM_CHOICE',
+  READY_BATTLE = 'READY_BATTLE',
+  DISCARD_CARD = 'DISCARD_CARD',
 }
