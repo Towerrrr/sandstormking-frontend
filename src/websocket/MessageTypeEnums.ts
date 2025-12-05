@@ -6,7 +6,7 @@ export enum WSMessageTypeEnum {
   CHALLENGER = 'CHALLENGER',
 }
 
-export enum ChallengerMessageEnum {
+export enum ChallengerMessageTypeEnum {
   INIT_GAME = 'init_game',
   END_GAME = 'end_game',
   REFRESH = 'refresh',

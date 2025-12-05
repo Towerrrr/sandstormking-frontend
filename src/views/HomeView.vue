@@ -117,9 +117,9 @@ import {
 } from '@/api/roomController'
 import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
 import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '@/websocket/useWebSocket'
 import { useLoginUserStore } from '@/stores/user'
-import { WSMessageTypeEnum } from '@/constants/wsMessageTypes'
+import { WSMessageTypeEnum } from '@/websocket/MessageTypeEnums'
 
 const loading = ref(false)
 const roomList = ref<API.Room[]>([])
