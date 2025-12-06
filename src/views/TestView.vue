@@ -21,6 +21,7 @@
       <button @click="sendChallengerRefresh" :disabled="!wsConnected">获取玩家信息</button>
       <button @click="sendChallengerEndGame" :disabled="!wsConnected">结束游戏</button>
       <button @click="sendChallengerReadyBattle" :disabled="!wsConnected">准备战斗</button>
+      <button @click="showCardMap" :disabled="!wsConnected">显示卡牌数据</button>
 
       <div>
         <input
@@ -36,6 +37,12 @@
       <h3>收到的消息：</h3>
       <pre style="background: #f7f7f9; padding: 1em; border-radius: 4px; min-height: 60px">{{
         lastMsg
+      }}</pre>
+    </div>
+    <div style="margin-top: 2rem">
+      <h3>卡牌数据：</h3>
+      <pre style="background: #f0f0f0; padding: 1em; border-radius: 4px; min-height: 100px">{{
+        cardMapData
       }}</pre>
     </div>
   </div>
@@ -58,9 +65,12 @@ import {
 import type { BuildDeckRequest } from '@/websocket/types'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/user'
+import { WSMessageTypeEnum } from '@/websocket/MessageTypeEnums'
+import { useCardMapStore } from '@/stores/card'
 
 const router = useRouter()
 const userStore = useLoginUserStore()
+const cardMapStore = useCardMapStore()
 
 const roomId = ref<number | null>(null)
 const lastMsg = ref('')
@@ -73,12 +83,42 @@ const buildDeckRequest = ref<BuildDeckRequest>({
   selectedCardInstanceIds: [],
 })
 
+const cardMapData = ref('')
+
 const {
   ws,
   connect: wsConnect,
   disconnect,
   sendMessage,
 } = useWebSocket((data) => {
+  if (!data?.type) return
+  switch (data.type) {
+    case WSMessageTypeEnum.START_GAME: {
+      if (data.gameMessage?.body) {
+        try {
+          const parsedBody = JSON.parse(data.gameMessage.body)
+          cardMapStore.setCardMap(parsedBody)
+        } catch (e) {
+          console.error('Failed to parse gameMessage.body:', e)
+        }
+      }
+      formatAndSetMessage(data)
+      break
+    }
+    default:
+      formatAndSetMessage(data)
+  }
+})
+
+onMounted(async () => {
+  await userStore.fetchLoginUser()
+
+  if (userStore.loginUser.userName === '未登录') {
+    router.push('/user/login')
+  }
+})
+
+function formatAndSetMessage(data: any) {
   if (data?.gameMessage?.body) {
     try {
       const parsedBody = JSON.parse(data.gameMessage.body)
@@ -100,15 +140,7 @@ const {
   } else {
     lastMsg.value = JSON.stringify(data, null, 2)
   }
-})
-
-onMounted(async () => {
-  await userStore.fetchLoginUser()
-
-  if (userStore.loginUser.userName === '未登录') {
-    router.push('/user/login')
-  }
-})
+}
 
 function connect() {
   if (roomId.value) {
@@ -174,5 +206,11 @@ function sendChallengerEndGame() {
 
 function sendChallengerReadyBattle() {
   sendMessage(wsChallengerReadyBattle())
+}
+
+function showCardMap() {
+  console.log('原始 cardMap 数据:', cardMapStore.cardMap)
+  console.log('JSON 序列化后的数据:', JSON.stringify(cardMapStore.cardMap))
+  cardMapData.value = JSON.stringify(cardMapStore.cardMap, null, 2)
 }
 </script>
