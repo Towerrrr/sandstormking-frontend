@@ -26,6 +26,11 @@ const router = createRouter({
       path: '/challenger',
       name: '挑战者',
       component: ChallengerView,
+    },
+    {
+      path: '/test',
+      name: '测试页面',
+      component: () => import('@/views/TestView.vue'),
     }
   ],
 })

@@ -1,5 +1,5 @@
 import { WSMessageTypeEnum, ChallengerMessageTypeEnum } from './MessageTypeEnums'
-import type { WSMessage, GameMessage, RoomInitRequest, ConfirmChoiceRequest } from './types'
+import type { WSMessage, GameMessage, BuildDeckRequest, InitGameRequest } from './types'
 
 export function wsInfoMessage(description?: string): WSMessage {
   return {
@@ -33,7 +33,7 @@ export function wsStartGame(roomId: number): WSMessage {
         playerCount: 2,
         version: 'version-1',
         userIds: ['1981742831273775106', '1989230020169609218'],
-      } as RoomInitRequest,
+      } as InitGameRequest,
     },
   }
 }
@@ -60,16 +60,12 @@ export function wsChallengerRefresh(): WSMessage {
   }
 }
 
-export function wsChallengerBuildDeck(): WSMessage {
+export function wsChallengerBuildDeck(body: BuildDeckRequest): WSMessage {
   return {
     type: WSMessageTypeEnum.CHALLENGER,
     gameMessage: {
       type: ChallengerMessageTypeEnum.BUILD_DECK,
-      // TODO 选项 ID
-      body: {
-        optionId: 1,
-        selectedCardInstanceIds: [1, 2, 3],
-      } as ConfirmChoiceRequest,
+      body,
     },
   }
 }

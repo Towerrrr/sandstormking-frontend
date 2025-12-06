@@ -11,14 +11,14 @@ export interface GameMessage {
   body?: any
 }
 
-export interface RoomInitRequest {
+export interface InitGameRequest {
   roomId: number
   playerCount: number
   version: string
   userIds: string[]
 }
 
-export interface ConfirmChoiceRequest {
+export interface BuildDeckRequest {
   optionId: number
   selectedCardInstanceIds: number[]
 }

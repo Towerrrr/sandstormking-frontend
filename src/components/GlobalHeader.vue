@@ -3,6 +3,8 @@
     <div class="left-bar">
       <div class="title-bar">
         <img class="logo" src="../assets/logo.png" alt="logo" />
+        <!-- TODO 测试，后续删除 -->
+        <a-button @click="pushTest"> 测试 ws </a-button>
       </div>
     </div>
 
@@ -47,6 +49,9 @@ const current = ref<string[]>([])
 router.afterEach((to, from, next) => {
   current.value = [to.path]
 })
+const pushTest = () => {
+  router.push('/test')
+}
 // 路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
   router.push({
