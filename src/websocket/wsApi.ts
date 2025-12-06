@@ -60,36 +60,16 @@ export function wsChallengerRefresh(): WSMessage {
   }
 }
 
-export function wsChallengerDrawCard(): WSMessage {
+export function wsChallengerBuildDeck(): WSMessage {
   return {
     type: WSMessageTypeEnum.CHALLENGER,
     gameMessage: {
-      type: ChallengerMessageTypeEnum.DRAW_CARD,
-      // TODO 选项 ID
-      body: 1,
-    },
-  }
-}
-
-export function wsChallengerDrawAgain(): WSMessage {
-  return {
-    type: WSMessageTypeEnum.CHALLENGER,
-    gameMessage: {
-      type: ChallengerMessageTypeEnum.DRAW_AGAIN,
+      type: ChallengerMessageTypeEnum.BUILD_DECK,
       // TODO 选项 ID
       body: {
         optionId: 1,
         selectedCardInstanceIds: [1, 2, 3],
       } as ConfirmChoiceRequest,
-    },
-  }
-}
-
-export function wsChallengerConfirmChoice(): WSMessage {
-  return {
-    type: WSMessageTypeEnum.CHALLENGER,
-    gameMessage: {
-      type: ChallengerMessageTypeEnum.CONFIRM_CHOICE,
     },
   }
 }
