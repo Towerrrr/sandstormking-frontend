@@ -9,7 +9,8 @@ export enum WSMessageTypeEnum {
 export enum ChallengerMessageTypeEnum {
   INIT_GAME = 'INIT_GAME',
   END_GAME = 'END_GAME',
-  REFRESH = 'REFRESH',
+  GET_PLAYER = 'GET_PLAYER',
+  GET_BATTLEFIELD = 'GET_BATTLEFIELD',
   BUILD_DECK = 'BUILD_DECK',
   READY_BATTLE = 'READY_BATTLE',
   DISCARD_CARD = 'DISCARD_CARD',

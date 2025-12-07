@@ -51,11 +51,21 @@ export function wsChallengerEndGame(): WSMessage {
   }
 }
 
-export function wsChallengerRefresh(): WSMessage {
+export function wsChallengerGetPlayer(): WSMessage {
   return {
     type: WSMessageTypeEnum.CHALLENGER,
     gameMessage: {
-      type: ChallengerMessageTypeEnum.REFRESH,
+      type: ChallengerMessageTypeEnum.GET_PLAYER,
+    },
+  }
+}
+
+export function wsChallengerGetBattlefield(body: string): WSMessage {
+  return {
+    type: WSMessageTypeEnum.CHALLENGER,
+    gameMessage: {
+      type: ChallengerMessageTypeEnum.GET_BATTLEFIELD,
+      body,
     },
   }
 }
@@ -70,11 +80,12 @@ export function wsChallengerBuildDeck(body: BuildDeckRequest): WSMessage {
   }
 }
 
-export function wsChallengerReadyBattle(): WSMessage {
+export function wsChallengerReadyBattle(body: string): WSMessage {
   return {
     type: WSMessageTypeEnum.CHALLENGER,
     gameMessage: {
       type: ChallengerMessageTypeEnum.READY_BATTLE,
+      body,
     },
   }
 }
