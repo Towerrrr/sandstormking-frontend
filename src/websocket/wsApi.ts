@@ -70,6 +70,15 @@ export function wsChallengerGetBattlefield(body: string): WSMessage {
   }
 }
 
+export function wsChallengerGetRoomState(): WSMessage {
+  return {
+    type: WSMessageTypeEnum.CHALLENGER,
+    gameMessage: {
+      type: ChallengerMessageTypeEnum.GET_ROOM_STATE,
+    },
+  }
+}
+
 export function wsChallengerBuildDeck(body: BuildDeckRequest): WSMessage {
   return {
     type: WSMessageTypeEnum.CHALLENGER,

@@ -14,12 +14,13 @@
         <button @click="connect" :disabled="wsConnected">连接 WebSocket</button>
       </div>
 
-      <button @click="disconnect" :disabled="wsConnected">断开连接</button>
+      <button @click="disconnect" :disabled="!wsConnected">断开连接</button>
       <button @click="sendInfoMsg" :disabled="!wsConnected">发送 Info 消息</button>
       <button @click="sendErrorMsg" :disabled="!wsConnected">发送 Error 消息</button>
       <button @click="sendStartGame" :disabled="!wsConnected">开始游戏</button>
       <button @click="sendChallengerGetPlayer" :disabled="!wsConnected">获取玩家信息</button>
       <button @click="sendChallengerGetBattlefield" :disabled="!wsConnected">获取战场信息</button>
+      <button @click="sendChallengerGetRoomState" :disabled="!wsConnected">获取房间信息</button>
       <button @click="sendChallengerEndGame" :disabled="!wsConnected">结束游戏</button>
       <button @click="sendChallengerReadyBattle" :disabled="!wsConnected">准备战斗</button>
       <button @click="showCardMap" :disabled="!wsConnected">显示卡牌数据</button>
@@ -63,6 +64,7 @@ import {
   wsChallengerBuildDeck,
   wsChallengerGetPlayer,
   wsChallengerGetBattlefield,
+  wsChallengerGetRoomState,
 } from '@/websocket/wsApi'
 import type { BuildDeckRequest } from '@/websocket/types'
 import { useRouter } from 'vue-router'
@@ -184,6 +186,10 @@ function sendChallengerGetPlayer() {
 
 function sendChallengerGetBattlefield() {
   sendMessage(wsChallengerGetBattlefield(currentBattlefield.value))
+}
+
+function sendChallengerGetRoomState() {
+  sendMessage(wsChallengerGetRoomState())
 }
 
 function sendChallengerBuildDeck() {
