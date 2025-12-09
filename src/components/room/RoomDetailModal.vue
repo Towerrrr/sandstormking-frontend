@@ -78,9 +78,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, computed, ref, watch } from 'vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { getUserVoByIdUsingGet } from '@/api/userController'
+import { computed, ref, watch } from 'vue';
 
 const ownerUser = ref<API.UserVO | null>(null)
 const ownerLoading = ref(false)
@@ -103,8 +103,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
   (e: 'cancel'): void
-  (e: 'ready'): void
-  (e: 'start-game'): void
+  (e: 'ready', payload?: any): void
+  (e: 'start-game', payload?: any): void
 }>()
 
 const emptySlots = computed(() => {

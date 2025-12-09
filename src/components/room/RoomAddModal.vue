@@ -33,8 +33,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
-
 const props = defineProps<{
   open: boolean
   roomForm: {

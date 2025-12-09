@@ -6,81 +6,31 @@
       </a-layout-header>
       <a-layout-content class="content">
         <div class="room-container">
-          <div class="room-header">
-            <h2>（╯°Д°）╯︵/(.□ . )</h2>
-            <a-button
-              type="primary"
-              shape="circle"
-              :icon="h(RetweetOutlined)"
-              @click="handleRefresh"
-            />
-            <a-button
-              type="primary"
-              shape="circle"
-              :icon="h(PlusOutlined)"
-              @click="showAddModal = true"
-            />
-          </div>
+          <RoomHeader @refresh="handleRefresh" @add="showAddModal = true" />
 
           <a-spin :spinning="loading">
             <a-empty v-if="!loading && roomList.length === 0" description="暂无房间" />
 
-            <div v-else class="room-list">
-              <a-card v-for="room in roomList" :key="room.id" class="room-card" hoverable>
-                <template #title>
-                  <div class="room-title">
-                    <span>{{ room.name }}</span>
-                  </div>
-                </template>
-
-                <div class="room-info">
-                  <p>
-                    <span class="label">房间ID:</span>
-                    <span>{{ room.id }}</span>
-                  </p>
-                  <p>
-                    <span class="label">玩家数量:</span>
-                    <span>{{ room.roomMembers?.length || 0 }} / {{ room.maxPlayers }}</span>
-                  </p>
-                  <p>
-                    <span class="label">创建时间:</span>
-                    <span>{{ formatTime(room.createdTime) }}</span>
-                  </p>
-                </div>
-
-                <template #actions>
-                  <a-button
-                    type="primary"
-                    @click="handleJoinRoom(room.id)"
-                    :disabled="isRoomFull(room)"
-                  >
-                    {{ isRoomFull(room) ? '房间已满' : '加入房间' }}
-                  </a-button>
-                </template>
-              </a-card>
-            </div>
+            <RoomList v-else :rooms="roomList" @join="handleJoinRoom" />
           </a-spin>
 
-          <div class="pagination">
-            <a-pagination
-              v-model:current="current"
-              v-model:page-size="pageSize"
-              :total="total"
-              show-size-changer
-              :page-size-options="['10', '20', '50']"
-              @change="loadRooms"
-            />
-          </div>
+          <RoomPagination
+            v-model:current="current"
+            v-model:page-size="pageSize"
+            :total="total"
+            @change="loadRooms"
+          />
         </div>
 
         <RoomAddModal
           :open="showAddModal"
-          :roomForm="roomForm"
-          :confirmLoading="addLoading"
+          :room-form="roomForm"
+          :confirm-loading="addLoading"
           @ok="handleAddRoom"
           @cancel="resetForm"
           @update:open="showAddModal = $event"
         />
+
         <RoomDetailModal
           v-model:open="modalVisible"
           :room="currentRoom"
@@ -89,7 +39,7 @@
           :is-current-user-ready="isCurrentUserReady"
           :is-owner="isOwner"
           @cancel="handleQuitRoom"
-          @ready="handleReady"
+          @ready="handleReady(sendMessage)"
           @start-game="handleStartGame"
         />
       </a-layout-content>
@@ -101,333 +51,97 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, h, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import GlobalHeader from '@/components/GlobalHeader.vue'
-import RoomAddModal from '@/components/RoomAddModal.vue'
-import RoomDetailModal from '@/components/RoomDetailModal.vue'
-import {
-  listRoomsUsingGet,
-  joinRoomUsingGet,
-  addRoomUsingPost,
-  quitRoomUsingGet,
-  getRoomUsingGet,
-  startGameUsingGet,
-  readyUsingPost,
-} from '@/api/roomController'
-import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
-import { PlusOutlined, RetweetOutlined } from '@ant-design/icons-vue'
-import { useWebSocket } from '@/websocket/useWebSocket'
+import GlobalHeader from '@/components/room/GlobalHeader.vue'
+import RoomHeader from '@/components/room/RoomHeader.vue'
+import RoomList from '@/components/room/RoomList.vue'
+import RoomPagination from '@/components/room/RoomPagination.vue'
+import RoomAddModal from '@/components/room/RoomAddModal.vue'
+import RoomDetailModal from '@/components/room/RoomDetailModal.vue'
 import { useLoginUserStore } from '@/stores/user'
-import { WSMessageTypeEnum } from '@/websocket/MessageTypeEnums'
-import { wsRoomStateChanged } from '@/websocket/wsApi'
-
-const loading = ref(false)
-const roomList = ref<API.Room[]>([])
-const current = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-const currentUserId = ref<number>()
-
-const showAddModal = ref(false)
-const addLoading = ref(false)
-const roomForm = ref<API.RoomAddRequest>({
-  name: '新房间',
-  maxPlayers: 3,
-})
-
-const modalVisible = ref(false)
-const currentRoom = ref<API.Room>()
-const roomMembers = ref<RoomMember[]>([])
-const isReadyLoading = ref(false)
+import { useRoomList } from '@/composables/room/useRoomList'
+import { useRoomDetail } from '@/composables/room/useRoomDetail'
+import { useRoomWebSocket } from '@/composables/room/useRoomWebSocket'
 
 const userStore = useLoginUserStore()
 
-const loadRooms = async () => {
-  loading.value = true
-  try {
-    const res = await listRoomsUsingGet({
-      current: current.value,
-      pageSize: pageSize.value,
-    })
+const {
+  loading,
+  roomList,
+  current,
+  pageSize,
+  total,
+  showAddModal,
+  addLoading,
+  roomForm,
+  loadRooms,
+  handleAddRoom: addRoom,
+  resetForm,
+  handleRefresh,
+} = useRoomList()
 
-    if (res.data.code === 0 && res.data.data) {
-      roomList.value = res.data.data
-      total.value = res.data.data.length
-    } else {
-      message.error(res.data.message || '加载房间列表失败')
-    }
-  } catch (error) {
-    message.error('加载房间列表失败')
-    console.error(error)
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  modalVisible,
+  currentRoom,
+  roomMembers,
+  isReadyLoading,
+  isCurrentUserReady,
+  isOwner,
+  currentUserId,
+  handleJoinRoom: joinRoom,
+  handleQuitRoom: quitRoom,
+  handleReady,
+  handleStartGame,
+  refreshRoomDetail,
+} = useRoomDetail()
+
+const { connect, disconnect, sendMessage } = useRoomWebSocket({
+  currentRoom,
+  onRoomStateChanged: async () => {
+    await refreshRoomDetail()
+    await loadRooms()
+  },
+  onStartGame: () => {
+    message.success('游戏开始')
+    // TODO 跳转到游戏页面
+  },
+})
+
 const handleAddRoom = async () => {
-  if (!roomForm.value.name || !roomForm.value.maxPlayers) {
-    message.warning('请填写完整的房间信息')
-    return
-  }
-
-  addLoading.value = true
-  try {
-    const res = await addRoomUsingPost(roomForm.value)
-    if (res.data.code === 0 && res.data.data) {
-      message.success('创建房间成功')
-      showAddModal.value = false
-
-      currentRoom.value = res.data.data
-
-      let members: RoomMember[] = []
-      const loginRes = await getLoginUserUsingGet()
-      if (loginRes.data.code === 0 && loginRes.data.data) {
-        const currentUserVO = loginRes.data.data
-        members.push({
-          userVo: currentUserVO,
-          ready: false,
-        })
-      }
-      roomMembers.value = members
-
-      modalVisible.value = true
-      if (currentRoom.value?.id !== undefined) {
-        connect(currentRoom.value.id)
-      } else {
-        message.error('房间ID无效，无法连接 WebSocket')
-      }
-
-      resetForm()
-      await loadRooms()
-    } else {
-      message.error(res.data.message || '创建房间失败')
-    }
-  } catch (error) {
-    message.error('创建房间失败')
-    console.error(error)
-  } finally {
-    addLoading.value = false
-  }
-}
-
-const resetForm = () => {
-  roomForm.value = {
-    name: '新房间',
-    maxPlayers: 3,
-  }
-}
-const handleJoinRoom = async (roomId: number | undefined) => {
-  if (!roomId) {
-    message.warning('房间ID无效')
-    return
-  }
-
-  try {
-    const joinRes = await joinRoomUsingGet({ roomId })
-    if (joinRes.data.code !== 0) {
-      message.error(joinRes.data.message || '加入房间失败')
-      return
-    }
-    message.success('加入房间成功')
-
-    const { room, members } = await fetchRoomDetailAndMembers(roomId)
+  const room = await addRoom()
+  if (room) {
     currentRoom.value = room
-    roomMembers.value = members
 
+    if (room.id !== undefined) {
+      await refreshRoomDetail()
+      modalVisible.value = true
+      connect(room.id)
+    }
+  }
+}
+
+const handleJoinRoom = async (roomId: number | undefined) => {
+  if (roomId === undefined) {
+    message.error('房间ID无效')
+    return
+  }
+  const success = await joinRoom(roomId)
+  if (success) {
     modalVisible.value = true
     if (currentRoom.value?.id !== undefined) {
       connect(currentRoom.value.id)
-    } else {
-      message.error('房间ID无效，无法连接 WebSocket')
     }
-
     await loadRooms()
-  } catch (error: any) {
-    message.error(error.message || '加入房间失败')
-    console.error(error)
   }
 }
 
 const handleQuitRoom = async () => {
-  if (!currentRoom.value?.id) {
+  const success = await quitRoom()
+  if (success) {
     modalVisible.value = false
-    return
-  }
-  try {
-    const res = await quitRoomUsingGet({ roomId: currentRoom.value.id })
-    if (res.data.code === 0) {
-      message.success('已退出房间')
-      modalVisible.value = false
-      disconnect()
-      await loadRooms()
-      roomMembers.value = []
-      currentRoom.value = undefined
-    } else {
-      message.error(res.data.message || '退出房间失败')
-    }
-  } catch (error) {
-    message.error('退出房间失败')
-    console.error(error)
-  }
-}
-
-const handleRefresh = () => {
-  current.value = 1
-  loadRooms()
-}
-
-const isRoomFull = (room: API.Room) => {
-  if (!room.maxPlayers) return false
-  return (room.roomMembers?.length || 0) >= room.maxPlayers
-}
-
-const formatTime = (timestamp: number | string | undefined) => {
-  if (!timestamp) return '-'
-  const date = new Date(Number(timestamp))
-  return date.toLocaleString('zh-CN')
-}
-
-const handleWsMessage = async (data: any) => {
-  if (!data?.type) return
-
-  const roomId = currentRoom.value?.id
-  if (!roomId) return
-
-  switch (data.type) {
-    case WSMessageTypeEnum.ROOM_STATE_CHANGED: {
-      try {
-        const { room, members } = await fetchRoomDetailAndMembers(roomId)
-        currentRoom.value = room
-        roomMembers.value = members
-      } catch (error: any) {
-        message.error(error.message || '刷新房间信息失败')
-      }
-      if (data.message && data.message.trim() !== '') {
-        message.info(data.message)
-      }
-      break
-    }
-    case WSMessageTypeEnum.START_GAME: {
-      message.success('游戏开始')
-      // TODO 跳转到游戏页面
-      break
-    }
-    default: {
-      if (data.message && data.message.trim() !== '') {
-        message.info(data.message)
-      }
-    }
-  }
-}
-const { ws, connect, disconnect, sendMessage } = useWebSocket(handleWsMessage)
-
-const fetchRoomDetailAndMembers = async (roomId: number) => {
-  const detailRes = await getRoomUsingGet({ roomId })
-  if (detailRes.data.code !== 0 || !detailRes.data.data) {
-    throw new Error(detailRes.data.message || '获取房间详情失败')
-  }
-  const room = detailRes.data.data
-
-  let members: RoomMember[] = []
-  const roomMembersArr = room.roomMembers
-  if (roomMembersArr && roomMembersArr.length > 0) {
-    const userIdList = roomMembersArr
-      .map((m: API.RoomMember) => m.userId)
-      .filter((id): id is number => id !== undefined)
-    if (userIdList.length > 0) {
-      const userRes = await batchGetUsersUsingPost({ userIdList })
-      if (userRes.data.code === 0 && userRes.data.data) {
-        members = roomMembersArr.map((roomMember: API.RoomMember) => ({
-          userVo: userRes.data.data?.find((user) => user.id === roomMember.userId) || undefined,
-          ready: roomMember.ready,
-        }))
-      } else {
-        throw new Error(userRes.data.message || '获取成员信息失败')
-      }
-    }
-  }
-  return {
-    room,
-    members,
-  }
-}
-
-const isCurrentUserReady = computed(() => {
-  if (!currentUserId.value || roomMembers.value.length === 0) {
-    return false
-  }
-
-  const currentUser = roomMembers.value.find((m) => m.userVo?.id === currentUserId.value)
-
-  return currentUser?.ready ?? false
-})
-
-const isOwner = computed<boolean | undefined>(() => {
-  if (currentUserId.value === undefined || currentRoom.value?.ownerId === undefined) {
-    return undefined
-  }
-  return currentRoom.value.ownerId === currentUserId.value
-})
-
-const handleReady = async () => {
-  if (!currentRoom.value?.id) {
-    message.warning('房间ID无效，无法准备/取消准备')
-    return
-  }
-  const targetReady = !isCurrentUserReady.value
-  isReadyLoading.value = true
-  try {
-    const res = await readyUsingPost({
-      ready: targetReady,
-      roomId: currentRoom.value.id,
-    })
-    if (res.data.code === 0) {
-      message.success(targetReady ? '已准备' : '已取消准备')
-      sendMessage(wsRoomStateChanged(targetReady ? '用户准备状态改变' : '用户取消准备'))
-    } else {
-      message.error(res.data.message || (targetReady ? '准备失败' : '取消准备失败'))
-    }
-  } catch (error) {
-    message.error(targetReady ? '准备失败' : '取消准备失败')
-    console.error(error)
-  } finally {
-    isReadyLoading.value = false
-  }
-}
-
-const handleStartGame = async () => {
-  const roomId = currentRoom.value?.id
-  if (roomId === undefined) {
-    message.warning('房间ID无效，无法开始游戏')
-    return
-  }
-
-  isReadyLoading.value = true
-  try {
-    const { room, members } = await fetchRoomDetailAndMembers(roomId)
-    currentRoom.value = room
-    roomMembers.value = members
-
-    const notReadyMembers = members.filter((m) => m.userVo?.id !== room.ownerId && !m.ready)
-    if (notReadyMembers.length > 0) {
-      message.warning('还有成员未准备，无法开始游戏')
-      return
-    }
-
-    const res = await startGameUsingGet({ roomId })
-    if (res.data.code === 0) {
-      sendMessage({
-        type: WSMessageTypeEnum.START_GAME,
-        data: '游戏开始',
-      })
-    } else {
-      message.error(res.data.message || '开始游戏失败')
-    }
-  } catch (error) {
-    message.error('开始游戏失败')
-    console.error(error)
-  } finally {
-    isReadyLoading.value = false
+    disconnect()
+    await loadRooms()
   }
 }
 
@@ -461,56 +175,6 @@ onMounted(async () => {
 .room-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.room-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.room-header h2 {
-  margin: 0;
-}
-
-.room-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.room-card {
-  transition: all 0.3s;
-}
-
-.room-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.room-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.room-info p {
-  margin: 8px 0;
-  display: flex;
-  justify-content: space-between;
-}
-
-.room-info .label {
-  font-weight: 500;
-  color: #666;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
 }
 
 .footer {

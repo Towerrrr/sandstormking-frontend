@@ -2,7 +2,7 @@
   <div id="globalHeader">
     <div class="left-bar">
       <div class="title-bar">
-        <img class="logo" src="../assets/logo.png" alt="logo" />
+        <img class="logo" :src="logoSrc" alt="logo" />
         <!-- TODO 测试，后续删除 -->
         <a-button @click="pushTest"> 测试 ws </a-button>
       </div>
@@ -39,6 +39,9 @@ import { useLoginUserStore } from '@/stores/user'
 import { userLogoutUsingPost } from '@/api/userController'
 import { message } from 'ant-design-vue'
 import { LogoutOutlined } from '@ant-design/icons-vue'
+import logoImage from '@/assets/logo.png'
+
+const logoSrc = ref(logoImage)
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
