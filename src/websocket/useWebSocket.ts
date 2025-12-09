@@ -1,5 +1,6 @@
 import config from '@/config'
 import { ref, onUnmounted } from 'vue'
+import { initWsApi } from '@/websocket/wsApi'
 
 export function useWebSocket(onMessage?: (data: any) => void) {
   const ws = ref<WebSocket | null>(null)
@@ -28,6 +29,8 @@ export function useWebSocket(onMessage?: (data: any) => void) {
     ws.value.onclose = () => {
       console.log('WebSocket关闭')
     }
+
+    initWsApi(sendMessage)
   }
 
   function disconnect() {

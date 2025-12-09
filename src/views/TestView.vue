@@ -95,7 +95,6 @@ const {
   ws,
   connect: wsConnect,
   disconnect,
-  sendMessage,
 } = useWebSocket((data) => {
   if (!data?.type) return
   switch (data.type) {
@@ -165,31 +164,31 @@ function connect() {
 }
 
 function sendInfoMsg() {
-  sendMessage(wsInfoMessage('这是一条测试 Info 消息'))
+  wsInfoMessage('这是一条测试 Info 消息')
 }
 
 function sendErrorMsg() {
-  sendMessage(wsErrorMessage('这是一条测试 Error 消息'))
+  wsErrorMessage('这是一条测试 Error 消息')
 }
 
 function sendStartGame() {
   if (roomId.value !== null) {
-    sendMessage(wsStartGame(roomId.value))
+    wsStartGame(roomId.value)
   } else {
     alert('请先输入有效的房间号')
   }
 }
 
 function sendChallengerGetPlayer() {
-  sendMessage(wsChallengerGetPlayer())
+  wsChallengerGetPlayer()
 }
 
 function sendChallengerGetBattlefield() {
-  sendMessage(wsChallengerGetBattlefield(currentBattlefield.value))
+  wsChallengerGetBattlefield(currentBattlefield.value)
 }
 
 function sendChallengerGetRoomState() {
-  sendMessage(wsChallengerGetRoomState())
+  wsChallengerGetRoomState()
 }
 
 function sendChallengerBuildDeck() {
@@ -199,7 +198,7 @@ function sendChallengerBuildDeck() {
     .filter((id) => !isNaN(id))
 
   buildDeckRequest.value.selectedCardInstanceIds = ids
-  sendMessage(wsChallengerBuildDeck(buildDeckRequest.value))
+  wsChallengerBuildDeck(buildDeckRequest.value)
 }
 
 function sendChallengerDiscardCard() {
@@ -208,18 +207,18 @@ function sendChallengerDiscardCard() {
       .split(',')
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id))
-    sendMessage(wsChallengerDiscardCard(ids))
+    wsChallengerDiscardCard(ids)
   } else {
     alert('请输入要弃置的卡牌ID')
   }
 }
 
 function sendChallengerEndGame() {
-  sendMessage(wsChallengerEndGame())
+  wsChallengerEndGame()
 }
 
 function sendChallengerReadyBattle() {
-  sendMessage(wsChallengerReadyBattle(currentBattlefield.value))
+  wsChallengerReadyBattle(currentBattlefield.value)
 }
 
 function showCardMap() {
