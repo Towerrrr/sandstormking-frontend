@@ -14,7 +14,7 @@ export function useRoomList() {
   const addLoading = ref(false)
   const roomForm = ref<API.RoomAddRequest>({
     name: '新房间',
-    maxPlayers: 3,
+    maxPlayers: 2,
   })
 
   const loadRooms = async () => {

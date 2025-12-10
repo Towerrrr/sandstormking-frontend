@@ -4,7 +4,7 @@
     <div class="header">
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
-      <div>第 1 回合<br />构筑阶段</div>
+      <div style="color: white">第 {{ currentRound }} 回合<br />{{ displayedPhase }}</div>
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
       <FullscreenToggle />
     </div>
@@ -68,7 +68,26 @@ import FullscreenToggle from '@/components/challenger/FullscreenToggle.vue'
 import CardSlot from '@/components/challenger/CardSlot.vue'
 import PlayerCardArea from '@/components/challenger/PlayerCardArea.vue'
 import CardPileModal from '@/components/challenger/CardPileModal.vue'
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useChallenger } from '@/websocket/useWsApi'
+import { useChallengerWebSocket } from '@/composables/challenger/useChallengerWebSocket'
+import { useRoute } from 'vue-router'
+import { PhaseEnum } from '@/constant/challenger'
+
+const route = useRoute()
+const roomId = Number(route.params.roomId)
+
+const currentRound = ref(1)
+const currentPhase = ref('')
+const displayedPhase = computed(() => {
+  const phaseMap: Record<string, string> = {
+    [PhaseEnum.BUILD] : '构筑阶段',
+    [PhaseEnum.BATTLE]: '战斗阶段'
+  }
+
+  return phaseMap[currentPhase.value] || currentPhase.value
+})
+const currentBattlefield = ref('GREEN')
 
 const show = ref(false)
 const cardSlots = ref([
@@ -76,6 +95,51 @@ const cardSlots = ref([
   { empty: false, cardBack: true },
   { empty: true, cardBack: false },
 ])
+
+const {
+  wsChallengerGetRoomState,
+  wsChallengerGetBattlefield,
+  wsChallengerBuildDeck,
+  wsChallengerDiscardCard,
+  wsChallengerEndGame,
+  wsChallengerGetPlayer,
+  wsChallengerReadyBattle,
+} = useChallenger()
+
+useChallengerWebSocket({
+  roomId,
+  onGetPlayer: (body: any): void => {
+    const parsedBody = JSON.parse(body)
+    return
+  },
+  onGetRoomState: (body: any): void => {
+    const parsedBody = JSON.parse(body)
+    currentRound.value = parsedBody.currentRound
+    return
+  },
+  onGetBattlefield: (body: any): void => {
+    const parsedBody = JSON.parse(body)
+    currentPhase.value = parsedBody.currentPhase
+    return
+  },
+  onBuildDeck: (body: any): void => {
+    return
+  },
+  onReadyBattle: (body: any): void => {
+    return
+  },
+  onDiscardCard: (body: any): void => {
+    return
+  },
+  onEndGame: (body: any): void => {
+    return
+  },
+})
+
+onMounted(() => {
+  wsChallengerGetRoomState()
+  wsChallengerGetBattlefield(currentBattlefield.value)
+})
 
 function handleSelect(idx: number) {
   alert('选择了第 ' + (idx + 1) + ' 个卡槽')

@@ -4,7 +4,7 @@ import { ChallengerMessageTypeEnum } from '@/websocket/MessageTypeEnums'
 import { onMounted, onUnmounted, type Ref } from 'vue'
 
 interface UseChallengerWebSocketOptions {
-  currentRoom: Ref<API.Room | undefined>
+  roomId: number
   onGetRoomState: (body: any) => void
   onGetBattlefield: (body: any) => void
   onGetPlayer: (body: any) => void
@@ -16,7 +16,7 @@ interface UseChallengerWebSocketOptions {
 
 export function useChallengerWebSocket(options: UseChallengerWebSocketOptions) {
   const {
-    currentRoom,
+    roomId,
     onGetRoomState,
     onGetBattlefield,
     onGetPlayer,
@@ -30,10 +30,9 @@ export function useChallengerWebSocket(options: UseChallengerWebSocketOptions) {
   const handleWsMessage = async (data: any) => {
     if (!data?.type) return
 
-    const roomId = currentRoom.value?.id
     if (!roomId) return
 
-    switch (data.type) {
+    switch (data.gameMessage.type) {
       case ChallengerMessageTypeEnum.GET_ROOM_STATE: {
         onGetRoomState(data.gameMessage.body)
         break

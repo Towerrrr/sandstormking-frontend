@@ -23,7 +23,7 @@ const router = createRouter({
       component: UserRegisterView,
     },
     {
-      path: '/challenger',
+      path: '/challenger/:roomId',
       name: '挑战者',
       component: ChallengerView,
     },

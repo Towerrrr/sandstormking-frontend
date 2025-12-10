@@ -109,9 +109,11 @@ const { connect, disconnect, sendMessage } = useRoomWebSocket({
     const parsedBody = JSON.parse(body)
     cardMapStore.setCardMap(parsedBody)
 
-    console.log('cardMapStore.cardMap', cardMapStore.cardMap)
-
-    router.push('/challenger')
+    if (currentRoom.value?.id) {
+      router.push(`/challenger/${currentRoom.value.id}`)
+    } else {
+      message.error('房间ID无效，无法进入游戏')
+    }
     message.success('游戏开始')
   },
 })
