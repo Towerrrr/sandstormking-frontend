@@ -9,35 +9,13 @@
       <FullscreenToggle />
     </div>
 
-    <!-- 对手区域 (上方) -->
-    <!-- 手牌、休息区、消耗牌堆 -->
-    <div class="player-card-area">
-      <div class="deck-section">
-        <div class="card-slot empty-slot"></div>
-        <div class="deck-pile"></div>
-      </div>
-
-      <div class="rest-zone">
-        <div class="rest-zone-row">
-          <div
-            v-for="i in 3"
-            :key="'player-' + i"
-            class="card-slot empty-slot"
-            @click="handleCardClick(i)"
-          ></div>
-        </div>
-        <div class="rest-zone-row">
-          <div
-            v-for="i in 3"
-            :key="'player-' + i"
-            class="card-slot empty-slot"
-            @click="handleCardClick(i)"
-          ></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 玩家信息 -->
+    <!-- 对手区域 -->
+    <PlayerCardArea
+      :deckFirst="true"
+      :deckSlotEmpty="false"
+      restKeyPrefix="player-rest"
+      @cardClick="handleCardClick"
+    />
     <div class="player-info">
       <a-avatar :size="56" class="player-avatar">
         <template #icon>
@@ -48,19 +26,16 @@
 
     <!-- 中央战场区域 -->
     <div class="battlefield">
-      <div class="card-slot empty-slot"></div>
-
+      <CardSlot :empty="true" />
       <a-avatar :size="56" class="player-avatar">
         <template #icon>
           <UserOutlined />
         </template>
       </a-avatar>
-
-      <div class="card-slot empty-slot"></div>
+      <CardSlot :empty="true" />
     </div>
 
-    <!-- 我方区域 (下方) -->
-    <!-- 玩家信息 -->
+    <!-- 我方区域 -->
     <div class="player-info">
       <a-avatar :size="56" class="player-avatar">
         <template #icon>
@@ -69,38 +44,20 @@
       </a-avatar>
     </div>
 
-    <!-- 手牌、休息区、消耗牌堆 -->
-    <div class="player-card-area">
-      <div class="rest-zone">
-        <div class="rest-zone-row">
-          <div
-            v-for="i in 3"
-            :key="'player-' + i"
-            class="card-slot empty-slot"
-            @click="handleCardClick(i)"
-          ></div>
-        </div>
-        <div class="rest-zone-row">
-          <div
-            v-for="i in 3"
-            :key="'player-' + i"
-            class="card-slot empty-slot"
-            @click="handleCardClick(i)"
-          ></div>
-        </div>
-      </div>
-
-      <div class="deck-section">
-        <div class="deck-pile"></div>
-        <div class="card-slot empty-slot"></div>
-      </div>
-    </div>
+    <PlayerCardArea
+      :deckFirst="false"
+      :deckSlotEmpty="true"
+      restKeyPrefix="self-rest"
+      @cardClick="handleCardClick"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { UserOutlined } from '@ant-design/icons-vue'
 import FullscreenToggle from '@/components/challenger/FullscreenToggle.vue'
+import CardSlot from '@/components/challenger/CardSlot.vue'
+import PlayerCardArea from '@/components/challenger/PlayerCardArea.vue'
 
 const handleCardClick = (index: number) => {
   console.log('点击了卡牌:', index)
@@ -127,93 +84,14 @@ const handleCardClick = (index: number) => {
 .player-card-area {
   display: flex;
   justify-content: space-between;
-}
-
-.deck-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
-}
-
-.rest-zone {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  gap: 10px;
-  padding: 10px;
 }
-
-.rest-zone-row {
-  display: flex;
-  gap: 10px;
-}
-
-.card-slot {
-  width: 69px;
-  height: 92px;
-  border: 2px solid #666;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  /* todo 下面是实验属性 */
-  background-image: url('https://ark-1358327410.cos.ap-nanjing.myqcloud.com/%E9%AA%B7%E9%AB%85.png');
-  background-size: cover; /* 覆盖整个容器 */
-  background-position: center; /* 居中显示 */
-  background-repeat: no-repeat;
-}
-
-.card-slot:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-}
-
-.card-back {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  cursor: default;
-}
-
-.card-back:hover {
-  transform: none;
-}
-
-.empty-slot {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px dashed rgba(255, 255, 255, 0.4);
-}
-
-.deck-pile {
-  width: 69px;
-  height: 92px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 2px solid #444;
-  border-radius: 8px;
-  box-shadow:
-    2px 2px 0 rgba(0, 0, 0, 0.3),
-    4px 4px 0 rgba(0, 0, 0, 0.2),
-    6px 6px 0 rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.deck-pile::after {
-  content: '牌堆';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-}
-
 .player-avatar {
   background: #f0f0f0;
 }
 
-/* 战场区域 */
 .battlefield {
   display: flex;
   justify-content: space-between;
@@ -221,5 +99,4 @@ const handleCardClick = (index: number) => {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
 }
-
 </style>
