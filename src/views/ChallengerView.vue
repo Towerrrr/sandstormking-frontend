@@ -12,23 +12,28 @@
     <!-- 对手区域 (上方) -->
     <!-- 手牌、休息区、消耗牌堆 -->
     <div class="player-card-area">
-      <div class="battle-row">
+      <div class="deck-section">
         <div class="card-slot empty-slot"></div>
-        <div
-          v-for="i in 3"
-          :key="'player-' + i"
-          class="card-slot empty-slot"
-          @click="handleCardClick(i)"
-        ></div>
-      </div>
-      <div class="battle-row">
         <div class="deck-pile"></div>
-        <div
-          v-for="i in 3"
-          :key="'player-' + i"
-          class="card-slot empty-slot"
-          @click="handleCardClick(i)"
-        ></div>
+      </div>
+
+      <div class="rest-zone">
+        <div class="rest-zone-row">
+          <div
+            v-for="i in 3"
+            :key="'player-' + i"
+            class="card-slot empty-slot"
+            @click="handleCardClick(i)"
+          ></div>
+        </div>
+        <div class="rest-zone-row">
+          <div
+            v-for="i in 3"
+            :key="'player-' + i"
+            class="card-slot empty-slot"
+            @click="handleCardClick(i)"
+          ></div>
+        </div>
       </div>
     </div>
 
@@ -66,22 +71,27 @@
 
     <!-- 手牌、休息区、消耗牌堆 -->
     <div class="player-card-area">
-      <div class="battle-row">
-        <div
-          v-for="i in 3"
-          :key="'player-' + i"
-          class="card-slot empty-slot"
-          @click="handleCardClick(i)"
-        ></div>
-        <div class="deck-pile"></div>
+      <div class="rest-zone">
+        <div class="rest-zone-row">
+          <div
+            v-for="i in 3"
+            :key="'player-' + i"
+            class="card-slot empty-slot"
+            @click="handleCardClick(i)"
+          ></div>
+        </div>
+        <div class="rest-zone-row">
+          <div
+            v-for="i in 3"
+            :key="'player-' + i"
+            class="card-slot empty-slot"
+            @click="handleCardClick(i)"
+          ></div>
+        </div>
       </div>
-      <div class="battle-row">
-        <div
-          v-for="i in 3"
-          :key="'player-' + i"
-          class="card-slot empty-slot"
-          @click="handleCardClick(i)"
-        ></div>
+
+      <div class="deck-section">
+        <div class="deck-pile"></div>
         <div class="card-slot empty-slot"></div>
       </div>
     </div>
@@ -116,8 +126,28 @@ const handleCardClick = (index: number) => {
 
 .player-card-area {
   display: flex;
+  justify-content: space-between;
+}
+
+.deck-section {
+  display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px;
+}
+
+.rest-zone {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  gap: 10px;
+  padding: 10px;
+}
+
+.rest-zone-row {
+  display: flex;
+  gap: 10px;
 }
 
 .card-slot {
@@ -192,8 +222,4 @@ const handleCardClick = (index: number) => {
   border-radius: 8px;
 }
 
-.battle-row {
-  display: flex;
-  justify-content: space-between;
-}
 </style>
