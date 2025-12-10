@@ -1,9 +1,8 @@
 <template>
   <div class="player-card-area">
-    <!-- 顶部/底部牌区顺序可根据传入的 props 变化 -->
     <div v-if="deckFirst" class="deck-section">
-      <CardSlot :empty="deckSlotEmpty" />
-      <div class="deck-pile"></div>
+      <CardSlot :empty="deckSlotEmpty" @click="handleDeckClick"/>
+      <div class="deck-pile" @click="handleDeckClick"></div>
     </div>
 
     <div class="rest-zone">
@@ -26,8 +25,8 @@
     </div>
 
     <div v-if="!deckFirst" class="deck-section">
-      <div class="deck-pile"></div>
-      <CardSlot :empty="deckSlotEmpty" />
+      <div class="deck-pile" @click="handleDeckClick"></div>
+      <CardSlot :empty="deckSlotEmpty" @click="handleDeckClick"/>
     </div>
   </div>
 </template>
@@ -41,10 +40,17 @@ const props = defineProps<{
   restKeyPrefix?: string        // key 前缀，避免 key 重复
 }>()
 
-const emits = defineEmits(['cardClick'])
+const emits = defineEmits<{
+  (e: 'cardClick', index: number): void
+  (e: 'deckClick'): void
+}>()
 
 const handleCardClick = (index: number) => {
   emits('cardClick', index)
+}
+
+const handleDeckClick = () => {
+  emits('deckClick')
 }
 </script>
 

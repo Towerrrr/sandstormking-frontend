@@ -15,6 +15,7 @@
       :deckSlotEmpty="false"
       restKeyPrefix="player-rest"
       @cardClick="handleCardClick"
+      @deckClick="show = true"
     />
     <div class="player-info">
       <a-avatar :size="56" class="player-avatar">
@@ -49,8 +50,16 @@
       :deckSlotEmpty="true"
       restKeyPrefix="self-rest"
       @cardClick="handleCardClick"
+      @deckClick="show = true"
     />
   </div>
+
+  <CardPileModal
+    :visible="show"
+    :slots="cardSlots"
+    @update:visible="show = $event"
+    @select="handleSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -58,7 +67,19 @@ import { UserOutlined } from '@ant-design/icons-vue'
 import FullscreenToggle from '@/components/challenger/FullscreenToggle.vue'
 import CardSlot from '@/components/challenger/CardSlot.vue'
 import PlayerCardArea from '@/components/challenger/PlayerCardArea.vue'
+import CardPileModal from '@/components/challenger/CardPileModal.vue'
+import { ref } from 'vue'
 
+const show = ref(false)
+const cardSlots = ref([
+  { empty: false, cardBack: false },
+  { empty: false, cardBack: true },
+  { empty: true, cardBack: false },
+])
+
+function handleSelect(idx: number) {
+  alert('选择了第 ' + (idx + 1) + ' 个卡槽')
+}
 const handleCardClick = (index: number) => {
   console.log('点击了卡牌:', index)
 }
