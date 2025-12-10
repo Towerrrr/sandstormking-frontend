@@ -4,30 +4,31 @@
     <div class="header">
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
+      <div>第 1 回合<br />构筑阶段</div>
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
-      <img style="height: 48px" src="../assets/logo.png" alt="logo" />
+      <FullscreenToggle />
     </div>
 
     <!-- 对手区域 (上方) -->
     <!-- 手牌、休息区、消耗牌堆 -->
     <div class="player-card-area">
       <div class="battle-row">
+        <div class="card-slot empty-slot"></div>
         <div
           v-for="i in 3"
           :key="'player-' + i"
           class="card-slot empty-slot"
           @click="handleCardClick(i)"
         ></div>
-        <div class="deck-pile"></div>
       </div>
       <div class="battle-row">
+        <div class="deck-pile"></div>
         <div
           v-for="i in 3"
           :key="'player-' + i"
           class="card-slot empty-slot"
           @click="handleCardClick(i)"
         ></div>
-        <div class="card-slot empty-slot"></div>
       </div>
     </div>
 
@@ -38,15 +39,6 @@
           <UserOutlined />
         </template>
       </a-avatar>
-
-      <a-button
-        type="text"
-        :title="isFullscreenActive ? '退出全屏' : '全屏'"
-        class="fullscreen-btn"
-        @click="handleFullscreen"
-      >
-        <FullscreenOutlined />
-      </a-button>
     </div>
 
     <!-- 中央战场区域 -->
@@ -97,26 +89,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { UserOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
-import { enterFullScreen, isFullScreen, exitFullScreen } from '@/hooks/fullscreen'
+import { UserOutlined } from '@ant-design/icons-vue'
+import FullscreenToggle from '@/components/challenger/FullscreenToggle.vue'
 
-const isFullscreenActive = ref(false)
-
-const handleFullscreen = () => {
-  if (isFullScreen()) {
-    exitFullScreen()
-    isFullscreenActive.value = false
-  } else {
-    enterFullScreen()
-    isFullscreenActive.value = true
-  }
-}
-
-// 监听全屏变化，保证按钮状态同步
-document.addEventListener('fullscreenchange', () => {
-  isFullscreenActive.value = !!isFullScreen()
-})
 const handleCardClick = (index: number) => {
   console.log('点击了卡牌:', index)
 }
@@ -146,8 +121,8 @@ const handleCardClick = (index: number) => {
 }
 
 .card-slot {
-  width: 75px;
-  height: 100px;
+  width: 69px;
+  height: 92px;
   border: 2px solid #666;
   border-radius: 8px;
   background: white;
@@ -181,8 +156,8 @@ const handleCardClick = (index: number) => {
 }
 
 .deck-pile {
-  width: 70px;
-  height: 90px;
+  width: 69px;
+  height: 92px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: 2px solid #444;
   border-radius: 8px;

@@ -1,5 +1,3 @@
-// src/utils/fullscreen.ts
-
 /**
  * 进入全屏
  * @param element - 需要全屏的元素，默认 document.documentElement
