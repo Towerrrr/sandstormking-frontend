@@ -1,14 +1,26 @@
 import { defineStore } from 'pinia'
-import { ref, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import config from '@/config'
-import { initWsApi } from '@/websocket/wsApi'
+import { initWsApi } from '@/websocket/useWsApi'
+
+type MessageListener = (data: any) => void
 
 export const useWsStore = defineStore('ws', () => {
   const ws = ref<WebSocket | null>(null)
   const isConnected = ref(false)
   const message = ref<any>(null) // 最近收到的一条消息
 
-  function connect(roomId: number, onMessage?: (data: any) => void) {
+  const listeners = new Set<MessageListener>()
+
+  function addListener(listener: MessageListener) {
+    listeners.add(listener)
+  }
+
+  function removeListener(listener: MessageListener) {
+    listeners.delete(listener)
+  }
+
+  function connect(roomId: number) {
     const host = config.WS_BASE_URL
     const url = `http://${host}/api/ws?roomId=${roomId}`
 
@@ -23,7 +35,8 @@ export const useWsStore = defineStore('ws', () => {
       try {
         const data = JSON.parse(event.data)
         message.value = data
-        onMessage && onMessage(data)
+        // 新增：通知所有监听器
+        listeners.forEach((fn) => fn(data))
       } catch (e) {
         // 非 JSON 消息
       }
@@ -46,6 +59,7 @@ export const useWsStore = defineStore('ws', () => {
       ws.value = null
       isConnected.value = false
     }
+    listeners.clear() // 可选：断开时清空所有监听器
   }
 
   function sendMessage(message: any) {
@@ -63,5 +77,7 @@ export const useWsStore = defineStore('ws', () => {
     connect,
     disconnect,
     sendMessage,
+    addListener,
+    removeListener,
   }
 })

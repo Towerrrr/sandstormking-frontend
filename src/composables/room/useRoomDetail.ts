@@ -9,8 +9,9 @@ import {
 } from '@/api/roomController'
 import { batchGetUsersUsingPost } from '@/api/userController'
 import type { InitGameRequest } from '@/websocket/types'
-import { wsStartGame } from '@/websocket/wsApi'
+import { useWsMessages } from '@/websocket/useWsApi'
 
+const { wsStartGame } = useWsMessages()
 export function useRoomDetail() {
   const modalVisible = ref(false)
   const currentRoom = ref<API.Room>()

@@ -65,7 +65,7 @@ import {
   wsChallengerGetPlayer,
   wsChallengerGetBattlefield,
   wsChallengerGetRoomState,
-} from '@/websocket/wsApi'
+} from '@/websocket/useWsApi'
 import type { BuildDeckRequest } from '@/websocket/types'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/user'

@@ -1,7 +1,7 @@
 import { message } from 'ant-design-vue'
 import { useWsStore } from '@/stores/ws'
 import { WSMessageTypeEnum } from '@/websocket/MessageTypeEnums'
-import type { Ref } from 'vue'
+import { onMounted, onUnmounted, type Ref } from 'vue'
 
 interface UseRoomWebSocketOptions {
   currentRoom: Ref<API.Room | undefined>
@@ -11,7 +11,6 @@ interface UseRoomWebSocketOptions {
 
 export function useRoomWebSocket(options: UseRoomWebSocketOptions) {
   const { currentRoom, onRoomStateChanged, onStartGame } = options
-
   const wsStore = useWsStore()
 
   const handleWsMessage = async (data: any) => {
@@ -40,8 +39,15 @@ export function useRoomWebSocket(options: UseRoomWebSocketOptions) {
     }
   }
 
+  onMounted(() => {
+    wsStore.addListener(handleWsMessage)
+  })
+  onUnmounted(() => {
+    wsStore.removeListener(handleWsMessage)
+  })
+
   function connect(roomId: number) {
-    wsStore.connect(roomId, handleWsMessage)
+    wsStore.connect(roomId)
   }
 
   return {
