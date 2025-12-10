@@ -5,7 +5,7 @@
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
       <img style="height: 48px" src="../assets/logo.png" alt="logo" />
       <div style="color: white">第 {{ currentRound }} 回合<br />{{ displayedPhase }}</div>
-      <img style="height: 48px" src="../assets/logo.png" alt="logo" />
+      <img style="height: 48px" :src="logoSrc" alt="logo" @click="showDrawSchedule = true" />
       <FullscreenToggle />
     </div>
 
@@ -60,6 +60,13 @@
     @update:visible="show = $event"
     @select="handleSelect"
   />
+
+  <DrawScheduleModal
+    :visible="showDrawSchedule"
+    :drawSchedules="drawSchedules"
+    @update:visible="showDrawSchedule = $event"
+    @select="handleDrawScheduleSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -68,12 +75,15 @@ import FullscreenToggle from '@/components/challenger/FullscreenToggle.vue'
 import CardSlot from '@/components/challenger/CardSlot.vue'
 import PlayerCardArea from '@/components/challenger/PlayerCardArea.vue'
 import CardPileModal from '@/components/challenger/CardPileModal.vue'
+import DrawScheduleModal from '@/components/challenger/DrawScheduleModal.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useChallenger } from '@/websocket/useWsApi'
 import { useChallengerWebSocket } from '@/composables/challenger/useChallengerWebSocket'
 import { useRoute } from 'vue-router'
 import { PhaseEnum } from '@/constant/challenger'
+import questionIcon from '@/assets/question.png'
 
+const logoSrc = ref(questionIcon)
 const route = useRoute()
 const roomId = Number(route.params.roomId)
 
@@ -90,11 +100,13 @@ const displayedPhase = computed(() => {
 const currentBattlefield = ref('GREEN')
 
 const show = ref(false)
+const showDrawSchedule = ref(false)
 const cardSlots = ref([
   { empty: false, cardBack: false },
   { empty: false, cardBack: true },
-  { empty: true, cardBack: false },
 ])
+
+const drawSchedules = ref<any>({})
 
 const {
   wsChallengerGetRoomState,
@@ -109,17 +121,19 @@ const {
 useChallengerWebSocket({
   roomId,
   onGetPlayer: (body: any): void => {
-    const parsedBody = JSON.parse(body)
     return
   },
   onGetRoomState: (body: any): void => {
-    const parsedBody = JSON.parse(body)
-    currentRound.value = parsedBody.currentRound
+    currentRound.value = body.currentRound
+    // 保存抽卡计划数据
+    if (body.drawSchedules) {
+      drawSchedules.value = body.drawSchedules
+      console.log('抽卡计划',  JSON.stringify(body.drawSchedules, null, 2))
+    }
     return
   },
   onGetBattlefield: (body: any): void => {
-    const parsedBody = JSON.parse(body)
-    currentPhase.value = parsedBody.currentPhase
+    currentPhase.value = body.currentPhase
     return
   },
   onBuildDeck: (body: any): void => {
@@ -144,6 +158,12 @@ onMounted(() => {
 function handleSelect(idx: number) {
   alert('选择了第 ' + (idx + 1) + ' 个卡槽')
 }
+
+function handleDrawScheduleSelect(round: string, option: any) {
+  console.log(`第 ${round} 回合 - 选择了抽卡方案:`, option)
+  alert(`第 ${round} 回合 - 选择了方案 ${option.id}: 抽 ${option.drawCount} 张 ${option.level} 级卡`)
+}
+
 const handleCardClick = (index: number) => {
   console.log('点击了卡牌:', index)
 }

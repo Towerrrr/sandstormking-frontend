@@ -106,8 +106,7 @@ const { connect, disconnect, sendMessage } = useRoomWebSocket({
     await loadRooms()
   },
   onStartGame: (body: any) => {
-    const parsedBody = JSON.parse(body)
-    cardMapStore.setCardMap(parsedBody)
+    cardMapStore.setCardMap(body)
 
     if (currentRoom.value?.id) {
       router.push(`/challenger/${currentRoom.value.id}`)

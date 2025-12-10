@@ -31,11 +31,13 @@ export const useWsStore = defineStore('ws', () => {
       console.log('WebSocket connected!')
     }
     ws.value.onmessage = (event) => {
-      console.log('收到消息', event.data)
       try {
         const data = JSON.parse(event.data)
+        if (data.gameMessage && typeof data.gameMessage.body === 'string') {
+          data.gameMessage.body = JSON.parse(data.gameMessage.body)
+        }
+        console.log('收到消息', data)
         message.value = data
-        // 新增：通知所有监听器
         listeners.forEach((fn) => fn(data))
       } catch (e) {
         // 非 JSON 消息
