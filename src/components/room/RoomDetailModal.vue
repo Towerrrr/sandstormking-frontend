@@ -26,6 +26,18 @@
         <span>{{ formatTime(room?.createdTime) }}</span>
       </div>
 
+      <!-- TODO 后续改成成员能同步看到修改 -->
+      <div class="start-game-params" v-if="props.isOwner">
+        <div class="params-title">挑战者参数</div>
+        <div class="param-row">
+          <span class="param-label">版本：</span>
+          <a-select v-model:value="version" style="width: 120px">
+            <a-select-option :value="VersionEnum.V1">V1</a-select-option>
+            <a-select-option :value="VersionEnum.V2">V2</a-select-option>
+          </a-select>
+        </div>
+      </div>
+
       <div class="member-list">
         <div class="member-title">成员({{ members.length }}/{{ room?.maxPlayers || 8 }})</div>
         <div class="avatars">
@@ -80,7 +92,15 @@
 <script setup lang="ts">
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { getUserVoByIdUsingGet } from '@/api/userController'
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue'
+import { VersionEnum } from '@/constant/challenger'
+import type { InitGameRequest } from '@/websocket/types'
+
+const version = ref(VersionEnum.V1)
+
+const userIdList = computed(() => {
+  return props.members.map((m) => m.userVo?.id?.toString())
+})
 
 const ownerUser = ref<API.UserVO | null>(null)
 const ownerLoading = ref(false)
@@ -125,7 +145,13 @@ function onReady() {
 }
 
 function onStartGame() {
-  emit('start-game')
+  const params = {
+    roomId: props.room?.id!,
+    playerCount: props.members.length,
+    version: version.value,
+    userIds: userIdList.value,
+  } as InitGameRequest
+  emit('start-game', params)
 }
 
 function formatTime(timestamp: number | string | undefined) {
@@ -178,6 +204,26 @@ watch(
   color: #888;
   font-weight: 500;
 }
+.start-game-params {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  border: 1px solid #eaeaea;
+}
+.params-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.param-row {
+  margin-bottom: 4px;
+}
+.param-label {
+  color: #888;
+  min-width: 80px;
+  display: inline-block;
+}
 .member-list {
   margin: 18px 0 12px 0;
 }
@@ -221,7 +267,7 @@ watch(
   border-width: 2px !important;
 }
 .avatar-ready {
-  border-color: #52C41A !important;
+  border-color: #52c41a !important;
   border-width: 2px !important;
 }
 .avatar-unready {

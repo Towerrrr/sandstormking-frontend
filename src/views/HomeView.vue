@@ -63,8 +63,11 @@ import { useLoginUserStore } from '@/stores/user'
 import { useRoomList } from '@/composables/room/useRoomList'
 import { useRoomDetail } from '@/composables/room/useRoomDetail'
 import { useRoomWebSocket } from '@/composables/room/useRoomWebSocket'
+import { useCardMapStore } from '@/stores/card'
+import router from '@/router'
 
 const userStore = useLoginUserStore()
+const cardMapStore = useCardMapStore()
 
 const {
   loading,
@@ -102,9 +105,14 @@ const { connect, disconnect, sendMessage } = useRoomWebSocket({
     await refreshRoomDetail()
     await loadRooms()
   },
-  onStartGame: () => {
+  onStartGame: (body: any) => {
+    const parsedBody = JSON.parse(body)
+    cardMapStore.setCardMap(parsedBody)
+
+    console.log('cardMapStore.cardMap', cardMapStore.cardMap)
+
+    router.push('/challenger')
     message.success('游戏开始')
-    // TODO 跳转到游戏页面
   },
 })
 

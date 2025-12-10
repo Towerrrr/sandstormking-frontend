@@ -7,7 +7,9 @@ import {
   startGameUsingGet,
   readyUsingPost,
 } from '@/api/roomController'
-import { batchGetUsersUsingPost, getLoginUserUsingGet } from '@/api/userController'
+import { batchGetUsersUsingPost } from '@/api/userController'
+import type { InitGameRequest } from '@/websocket/types'
+import { wsStartGame } from '@/websocket/wsApi'
 
 export function useRoomDetail() {
   const modalVisible = ref(false)
@@ -132,7 +134,7 @@ export function useRoomDetail() {
     }
   }
 
-  const handleStartGame = async (sendWsMessage: (msg: any) => void) => {
+  const handleStartGame = async (initGameRequest: InitGameRequest) => {
     const roomId = currentRoom.value?.id
     if (roomId === undefined) {
       message.warning('房间ID无效,无法开始游戏')
@@ -153,10 +155,7 @@ export function useRoomDetail() {
 
       const res = await startGameUsingGet({ roomId })
       if (res.data.code === 0) {
-        sendWsMessage({
-          type: 'START_GAME',
-          data: '游戏开始',
-        })
+        wsStartGame(initGameRequest)
       } else {
         message.error(res.data.message || '开始游戏失败')
       }

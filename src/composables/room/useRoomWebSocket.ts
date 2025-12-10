@@ -6,7 +6,7 @@ import type { Ref } from 'vue'
 interface UseRoomWebSocketOptions {
   currentRoom: Ref<API.Room | undefined>
   onRoomStateChanged: () => Promise<void>
-  onStartGame: () => void
+  onStartGame: (body: any) => void
 }
 
 export function useRoomWebSocket(options: UseRoomWebSocketOptions) {
@@ -27,7 +27,7 @@ export function useRoomWebSocket(options: UseRoomWebSocketOptions) {
         break
       }
       case WSMessageTypeEnum.START_GAME: {
-        onStartGame()
+        onStartGame(data.gameMessage.body)
         break
       }
       default: {

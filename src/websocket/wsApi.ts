@@ -39,17 +39,12 @@ export function wsRoomStateChanged(description?: string) {
   })
 }
 
-export function wsStartGame(roomId: number) {
+export function wsStartGame(body: InitGameRequest) {
   send({
     type: WSMessageTypeEnum.START_GAME,
     gameMessage: {
       type: ChallengerMessageTypeEnum.INIT_GAME,
-      body: {
-        roomId,
-        playerCount: 2,
-        version: 'version-1',
-        userIds: ['1981742831273775106', '1989230020169609218'],
-      } as InitGameRequest,
+      body,
     },
   })
 }
